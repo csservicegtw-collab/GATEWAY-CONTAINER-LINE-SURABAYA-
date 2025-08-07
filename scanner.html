@@ -1,25 +1,19 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Scanner QR Code (Kamera)</title>
-  <script src="https://unpkg.com/html5-qrcode@2.3.10"></script>
-</head>
-<body>
-  <h2>📸 Scan QR Peserta</h2>
-  <div id="reader" style="width: 300px; margin-bottom: 10px;"></div>
-  <p id="last-scan" style="font-weight: bold; color: green;"></p>
-
+  <title>QR Scanner - Panitia</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+    // Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
       authDomain: "scanner-gathering.firebaseapp.com",
       databaseURL: "https://scanner-gathering-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "scanner-gathering",
-      storageBucket: "scanner-gathering.firebasestorage.app",
+      storageBucket: "scanner-gathering.appspot.com",
       messagingSenderId: "627134959703",
       appId: "1:627134959703:web:0ae958bbd74da08dc9d312",
       measurementId: "G-HW6Y6VN817"
@@ -27,43 +21,37 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const scanRef = ref(db, 'scans/');
 
-    function sendToFirebase(result) {
-      push(scanRef, {
-        result: result,
-        timestamp: Date.now()
+    function startScanner() {
+      const scanner = new Html5Qrcode("reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText, decodedResult) => {
+          console.log(`QR Code detected: ${decodedText}`);
+          const time = new Date().toISOString();
+          const newRef = push(ref(db, "scans"));
+          set(newRef, {
+            text: decodedText,
+            timestamp: time
+          });
+          alert("Berhasil scan: " + decodedText);
+          scanner.stop();
+          scanner.clear();
+        },
+        (errorMessage) => {
+          console.warn(errorMessage);
+        }
+      ).catch(err => {
+        console.error("Scanner start error:", err);
       });
-
-      document.getElementById("last-scan").textContent = "✅ Terakhir scan: " + result;
     }
 
-    const html5QrCode = new Html5Qrcode("reader");
-
-    Html5Qrcode.getCameras().then(devices => {
-      if (devices && devices.length) {
-        const cameraId = devices[0].id;
-        html5QrCode.start(
-          cameraId,
-          {
-            fps: 10,
-            qrbox: 250
-          },
-          qrCodeMessage => {
-            sendToFirebase(qrCodeMessage);
-            html5QrCode.pause(); // Hindari double scan
-            setTimeout(() => html5QrCode.resume(), 2000); // Scan lagi setelah 2 detik
-          },
-          errorMessage => {
-            // Gagal membaca QR (biarkan kosong agar tidak spam)
-          }
-        ).catch(err => {
-          console.error("Gagal memulai kamera:", err);
-        });
-      }
-    }).catch(err => {
-      console.error("Tidak dapat mengakses kamera:", err);
-    });
+    window.onload = startScanner;
   </script>
+</head>
+<body>
+  <h2>Scan QR Code Peserta</h2>
+  <div id="reader" style="width: 300px; height: 300px;"></div>
 </body>
 </html>
