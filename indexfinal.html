@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Gathering GCL 2025</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Open Sans', sans-serif;
+      background: url('28a96ca8e1c5234aacb6f7d30b65e5b6.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #FFE082;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-style: italic;
+      margin-bottom: 30px;
+      color: #B2EBF2;
+    }
+
+    .company {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 30px;
+      text-transform: uppercase;
+      color: #FFCDD2;
+    }
+
+    .table {
+      font-size: 24px;
+      margin-top: 10px;
+      font-weight: 600;
+      color: #C5E1A5;
+    }
+
+    .team {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <h1>SELAMAT DATANG DI CUSTOMER GATHERING<br>GATEWAY CONTAINER LINE 2025</h1>
+    <h2>"Navigating The Turbulence, Cruising The Opportunities"</h2>
+    <div class="company" id="company">PT NAMA PERUSAHAAN</div>
+    <div class="table" id="table">Nomor Meja: 01</div>
+    <div class="team">Team Event</div>
+  </div>
+
+  <script>
+    // Ambil parameter dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const company = decodeURIComponent(urlParams.get('company') || 'PT NAMA PERUSAHAAN');
+    const table = decodeURIComponent(urlParams.get('table') || '01');
+
+    // Tampilkan di halaman
+    document.getElementById('company').textContent = company.toUpperCase();
+    document.getElementById('table').textContent = "Nomor Meja: " + table;
+
+    // Kirim ke Google Form
+    const formURL = "https://docs.google.com/forms/d/e/1FAIpQLScU5G2UO2TKcVffDQEjSZdQuXfq43Ldgfq-lJW9DedgRmQbqg/formResponse";
+    const formData = new FormData();
+    formData.append("entry.712340243", company);
+    formData.append("entry.1805472999", table);
+
+    fetch(formURL, {
+      method: "POST",
+      mode: "no-cors",
+      body: formData
+    });
+  </script>
+</body>
+</html>
