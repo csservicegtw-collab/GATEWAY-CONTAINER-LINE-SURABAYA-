@@ -1,12 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>QR Scanner - Panitia</title>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Scanner Panitia</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #reader {
+      width: 300px;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Scan QR Code</h1>
+  <div id="reader"></div>
+
+  <!-- Firebase -->
   <script type="module">
-    // Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
@@ -22,36 +39,34 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    function startScanner() {
-      const scanner = new Html5Qrcode("reader");
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (decodedText, decodedResult) => {
-          console.log(`QR Code detected: ${decodedText}`);
-          const time = new Date().toISOString();
-          const newRef = push(ref(db, "scans"));
-          set(newRef, {
-            text: decodedText,
-            timestamp: time
-          });
-          alert("Berhasil scan: " + decodedText);
-          scanner.stop();
-          scanner.clear();
-        },
-        (errorMessage) => {
-          console.warn(errorMessage);
-        }
-      ).catch(err => {
-        console.error("Scanner start error:", err);
-      });
+    function updateAttendance(data) {
+      const scanRef = ref(db, 'lastScan');
+      set(scanRef, data);
     }
 
-    window.onload = startScanner;
+    const html5QrCode = new Html5Qrcode("reader");
+    const qrConfig = { fps: 10, qrbox: 250 };
+
+    html5QrCode.start(
+      { facingMode: "environment" },
+      qrConfig,
+      (decodedText) => {
+        try {
+          const parsed = JSON.parse(decodedText);
+          if (parsed.nama_perusahaan && parsed.nomor_meja) {
+            updateAttendance(parsed);
+            alert(`Scan Berhasil:\n${parsed.nama_perusahaan} (Meja ${parsed.nomor_meja})`);
+          } else {
+            alert("QR tidak valid!");
+          }
+        } catch (e) {
+          alert("QR Code harus berupa JSON valid.");
+        }
+      },
+      (errorMsg) => {
+        // Ignore scanning errors
+      }
+    );
   </script>
-</head>
-<body>
-  <h2>Scan QR Code Peserta</h2>
-  <div id="reader" style="width: 300px; height: 300px;"></div>
 </body>
 </html>
