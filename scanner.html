@@ -3,24 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>Scanner Panitia</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
     }
-    #reader {
-      width: 300px;
-      margin: auto;
-    }
   </style>
 </head>
 <body>
-  <h1>Scan QR Code</h1>
-  <div id="reader"></div>
+  <h1>Scan QR Selesai</h1>
+  <p id="status">Mencatat kehadiran...</p>
 
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -39,34 +33,33 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    function updateAttendance(data) {
-      const scanRef = ref(db, 'lastScan');
-      set(scanRef, data);
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
     }
 
-    const html5QrCode = new Html5Qrcode("reader");
-    const qrConfig = { fps: 10, qrbox: 250 };
+    const nama_perusahaan = getQueryParam("company");
+    const nomor_meja = getQueryParam("table");
 
-    html5QrCode.start(
-      { facingMode: "environment" },
-      qrConfig,
-      (decodedText) => {
-        try {
-          const parsed = JSON.parse(decodedText);
-          if (parsed.nama_perusahaan && parsed.nomor_meja) {
-            updateAttendance(parsed);
-            alert(`Scan Berhasil:\n${parsed.nama_perusahaan} (Meja ${parsed.nomor_meja})`);
-          } else {
-            alert("QR tidak valid!");
-          }
-        } catch (e) {
-          alert("QR Code harus berupa JSON valid.");
-        }
-      },
-      (errorMsg) => {
-        // Ignore scanning errors
-      }
-    );
+    const statusEl = document.getElementById("status");
+
+    if (nama_perusahaan && nomor_meja) {
+      const scanData = {
+        nama_perusahaan: decodeURIComponent(nama_perusahaan),
+        nomor_meja: decodeURIComponent(nomor_meja)
+      };
+
+      const scanRef = ref(db, "lastScan");
+      set(scanRef, scanData)
+        .then(() => {
+          statusEl.innerText = `Kehadiran dicatat:\n${scanData.nama_perusahaan} (Meja ${scanData.nomor_meja})`;
+        })
+        .catch((err) => {
+          statusEl.innerText = `Gagal mencatat: ${err.message}`;
+        });
+    } else {
+      statusEl.innerText = "QR tidak valid atau data tidak lengkap di URL.";
+    }
   </script>
 </body>
 </html>
