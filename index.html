@@ -62,37 +62,86 @@
       color: #ccc;
     }
   </style>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
+      authDomain: "scanner-gathering.firebaseapp.com",
+      databaseURL: "https://scanner-gathering-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "scanner-gathering",
+      storageBucket: "scanner-gathering.appspot.com",
+      messagingSenderId: "627134959703",
+      appId: "1:627134959703:web:0ae958bbd74da08dc9d312",
+      measurementId: "G-HW6Y6VN817"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Ambil kode dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+      const scanRef = ref(db, 'undangan/' + code);
+      get(scanRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const company = data.company || 'PT NAMA PERUSAHAAN';
+          const table = data.table || '01';
+
+          // Tampilkan ke halaman
+          document.getElementById('company').textContent = company.toUpperCase();
+          document.getElementById('table').textContent = "Nomor Meja: " + table;
+
+          // Kirim ke Google Form
+          const formURL = "https://docs.google.com/forms/d/e/1FAIpQLScU5G2UO2TKcVffDQEjSZdQuXfq43Ldgfq-lJW9DedgRmQbqg/formResponse";
+          const formData = new FormData();
+          formData.append("entry.712340243", company);
+          formData.append("entry.1805472999", table);
+
+          fetch(formURL, {
+            method: "POST",
+            mode: "no-cors",
+            body: formData
+          });
+
+          // Simpan ke Firebase (opsional tracking)
+          const pushRef = ref(db, 'scans/' + Date.now());
+          import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js").then(({ set }) => {
+            set(pushRef, {
+              company: company,
+              table: table,
+              timestamp: new Date().toISOString()
+            });
+          });
+
+        } else {
+          document.getElementById('company').textContent = "Kode tidak ditemukan";
+          document.getElementById('table').textContent = "Silakan hubungi panitia.";
+        }
+      }).catch((error) => {
+        console.error(error);
+        document.getElementById('company').textContent = "Terjadi kesalahan";
+        document.getElementById('table').textContent = "Silakan coba lagi.";
+      });
+    } else {
+      document.getElementById('company').textContent = "Tidak ada kode";
+      document.getElementById('table').textContent = "Silakan scan ulang.";
+    }
+  </script>
 </head>
 <body>
   <div class="overlay">
     <h1>SELAMAT DATANG DI CUSTOMER GATHERING<br>GATEWAY CONTAINER LINE 2025</h1>
     <h2>"Navigating The Turbulence, Cruising The Opportunities"</h2>
-    <div class="company" id="company">PT NAMA PERUSAHAAN</div>
-    <div class="table" id="table">Nomor Meja: 01</div>
+    <div class="company" id="company">Memuat...</div>
+    <div class="table" id="table"></div>
     <div class="team">Team Event</div>
   </div>
-
-  <script>
-    // Ambil parameter dari URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const company = decodeURIComponent(urlParams.get('company') || 'PT NAMA PERUSAHAAN');
-    const table = decodeURIComponent(urlParams.get('table') || '01');
-
-    // Tampilkan di halaman
-    document.getElementById('company').textContent = company.toUpperCase();
-    document.getElementById('table').textContent = "Nomor Meja: " + table;
-
-    // Kirim ke Google Form
-    const formURL = "https://docs.google.com/forms/d/e/1FAIpQLScU5G2UO2TKcVffDQEjSZdQuXfq43Ldgfq-lJW9DedgRmQbqg/formResponse";
-    const formData = new FormData();
-    formData.append("entry.712340243", company);
-    formData.append("entry.1805472999", table);
-
-    fetch(formURL, {
-      method: "POST",
-      mode: "no-cors",
-      body: formData
-    });
-  </script>
 </body>
 </html>
