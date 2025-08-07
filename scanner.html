@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Scanner QR Code (Kamera)</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.10"></script>
+</head>
+<body>
+  <h2>📸 Scan QR Peserta</h2>
+  <div id="reader" style="width: 300px; margin-bottom: 10px;"></div>
+  <p id="last-scan" style="font-weight: bold; color: green;"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
+      authDomain: "scanner-gathering.firebaseapp.com",
+      databaseURL: "https://scanner-gathering-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "scanner-gathering",
+      storageBucket: "scanner-gathering.firebasestorage.app",
+      messagingSenderId: "627134959703",
+      appId: "1:627134959703:web:0ae958bbd74da08dc9d312",
+      measurementId: "G-HW6Y6VN817"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const scanRef = ref(db, 'scans/');
+
+    function sendToFirebase(result) {
+      push(scanRef, {
+        result: result,
+        timestamp: Date.now()
+      });
+
+      document.getElementById("last-scan").textContent = "✅ Terakhir scan: " + result;
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        const cameraId = devices[0].id;
+        html5QrCode.start(
+          cameraId,
+          {
+            fps: 10,
+            qrbox: 250
+          },
+          qrCodeMessage => {
+            sendToFirebase(qrCodeMessage);
+            html5QrCode.pause(); // Hindari double scan
+            setTimeout(() => html5QrCode.resume(), 2000); // Scan lagi setelah 2 detik
+          },
+          errorMessage => {
+            // Gagal membaca QR (biarkan kosong agar tidak spam)
+          }
+        ).catch(err => {
+          console.error("Gagal memulai kamera:", err);
+        });
+      }
+    }).catch(err => {
+      console.error("Tidak dapat mengakses kamera:", err);
+    });
+  </script>
+</body>
+</html>

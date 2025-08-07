@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Display Hasil Scan QR</title>
+</head>
+<body>
+  <h2>📋 Daftar Hasil Scan Masuk</h2>
+  <ul id="resultList" style="font-size: 18px;"></ul>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, onChildAdded } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
+      authDomain: "scanner-gathering.firebaseapp.com",
+      databaseURL: "https://scanner-gathering-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "scanner-gathering",
+      storageBucket: "scanner-gathering.firebasestorage.app",
+      messagingSenderId: "627134959703",
+      appId: "1:627134959703:web:0ae958bbd74da08dc9d312",
+      measurementId: "G-HW6Y6VN817"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const scanRef = ref(db, 'scans/');
+
+    const list = document.getElementById('resultList');
+
+    onChildAdded(scanRef, (data) => {
+      const li = document.createElement('li');
+      li.textContent = data.val().result;
+      list.prepend(li); // hasil terbaru di atas
+    });
+  </script>
+</body>
+</html>
