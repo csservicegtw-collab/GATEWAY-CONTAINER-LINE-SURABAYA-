@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Display Kehadiran - GCL 2025</title>
+  <title>Display Kehadiran</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -12,7 +12,6 @@
       background: url('background.jpg') no-repeat center center fixed;
       background-size: cover;
     }
-
     .overlay {
       background-color: rgba(0, 0, 0, 0.6);
       min-height: 100vh;
@@ -23,7 +22,6 @@
       padding: 40px 20px;
       text-align: center;
     }
-
     h1 {
       font-family: 'Playfair Display', serif;
       font-size: 36px;
@@ -31,14 +29,12 @@
       margin-bottom: 10px;
       color: #FFE082;
     }
-
     h2 {
       font-size: 24px;
       font-style: italic;
       margin-bottom: 30px;
       color: #B2EBF2;
     }
-
     .company {
       font-family: 'Courier New', Courier, monospace;
       font-size: 32px;
@@ -47,7 +43,6 @@
       text-transform: uppercase;
       color: #FFCDD2;
     }
-
     .table {
       font-family: 'Courier New', Courier, monospace;
       font-size: 24px;
@@ -55,18 +50,26 @@
       font-weight: 600;
       color: #C5E1A5;
     }
-
-    .team {
-      margin-top: 30px;
-      font-size: 14px;
+    .time {
+      margin-top: 20px;
       color: #ccc;
+      font-size: 14px;
     }
   </style>
+</head>
+<body>
+  <div class="overlay">
+    <h1>SELAMAT DATANG DI CUSTOMER GATHERING<br>GATEWAY CONTAINER LINE 2025</h1>
+    <h2>"Navigating The Turbulence, Cruising The Opportunities"</h2>
+    <div class="company" id="company">Menunggu scan...</div>
+    <div class="table" id="table"></div>
+    <div class="time" id="time"></div>
+  </div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
@@ -81,23 +84,16 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const scanRef = ref(db, 'scans');
+    const scannedRef = ref(db, 'scanned');
 
-    // Auto tampilkan data terakhir
-    onChildAdded(scanRef, (snapshot) => {
+    onValue(scannedRef, (snapshot) => {
       const data = snapshot.val();
-      document.getElementById('company').textContent = (data.company || 'PT NAMA PERUSAHAAN').toUpperCase();
-      document.getElementById('table').textContent = "Nomor Meja: " + (data.table || '01');
+      if (data) {
+        document.getElementById('company').textContent = data.company.toUpperCase();
+        document.getElementById('table').textContent = "Nomor Meja: " + data.table;
+        document.getElementById('time').textContent = "Scan terakhir: " + new Date(data.time).toLocaleString('id-ID');
+      }
     });
   </script>
-</head>
-<body>
-  <div class="overlay">
-    <h1>SELAMAT DATANG DI CUSTOMER GATHERING<br>GATEWAY CONTAINER LINE 2025</h1>
-    <h2>"Navigating The Turbulence, Cruising The Opportunities"</h2>
-    <div class="company" id="company">PT NAMA PERUSAHAAN</div>
-    <div class="table" id="table">Nomor Meja: 01</div>
-    <div class="team">Team Event</div>
-  </div>
 </body>
 </html>
