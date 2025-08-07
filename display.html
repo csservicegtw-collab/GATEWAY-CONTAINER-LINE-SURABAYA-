@@ -1,23 +1,17 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Display Hasil Scan QR</title>
-</head>
-<body>
-  <h2>📋 Daftar Hasil Scan Masuk</h2>
-  <ul id="resultList" style="font-size: 18px;"></ul>
-
+  <title>Hasil Scan Realtime</title>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getDatabase, ref, onChildAdded } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
       authDomain: "scanner-gathering.firebaseapp.com",
       databaseURL: "https://scanner-gathering-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "scanner-gathering",
-      storageBucket: "scanner-gathering.firebasestorage.app",
+      storageBucket: "scanner-gathering.appspot.com",
       messagingSenderId: "627134959703",
       appId: "1:627134959703:web:0ae958bbd74da08dc9d312",
       measurementId: "G-HW6Y6VN817"
@@ -25,15 +19,20 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const scanRef = ref(db, 'scans/');
 
-    const list = document.getElementById('resultList');
+    const list = document.getElementById("scan-list");
+    const scansRef = ref(db, "scans");
 
-    onChildAdded(scanRef, (data) => {
-      const li = document.createElement('li');
-      li.textContent = data.val().result;
-      list.prepend(li); // hasil terbaru di atas
+    onChildAdded(scansRef, (snapshot) => {
+      const data = snapshot.val();
+      const item = document.createElement("li");
+      item.textContent = `${data.timestamp} — ${data.text}`;
+      list.prepend(item);
     });
   </script>
+</head>
+<body>
+  <h2>Daftar Hasil Scan (Realtime)</h2>
+  <ul id="scan-list"></ul>
 </body>
 </html>
