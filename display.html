@@ -13,7 +13,7 @@
       background-size: cover;
     }
     .overlay {
-      background-color: rgba(0, 0, 0, 0.65);
+      background-color: rgba(0, 0, 0, 0.75);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -21,6 +21,16 @@
       justify-content: center;
       padding: 40px 20px;
       text-align: center;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
     h1 {
       font-family: 'Cinzel', serif;
@@ -29,6 +39,17 @@
       margin-bottom: 10px;
       color: #FFE082;
       text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+      animation: slideIn 1s ease-in-out forwards;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
     h2 {
       font-size: 22px;
@@ -36,6 +57,7 @@
       margin-bottom: 30px;
       color: #B2EBF2;
       text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+      animation: slideIn 1s ease-in-out 0.5s forwards;
     }
     .company {
       font-family: 'Cinzel', serif;
@@ -46,17 +68,27 @@
       color: #FFCDD2;
       letter-spacing: 2px;
       text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
+      opacity: 0;
+      animation: fadeIn 1s ease-in-out 1s forwards, glow 1.5s infinite alternate;
+    }
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 5px rgba(255, 221, 51, 0.5);
+      }
+      to {
+        text-shadow: 0 0 20px rgba(255, 221, 51, 1);
+      }
     }
     .table {
       margin-top: 20px;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.1);
       padding: 20px 40px;
       border-radius: 20px;
       border: 3px solid #FFD54F;
       box-shadow: 0 0 25px rgba(255, 213, 79, 0.8);
       text-align: center;
-      font-size: 24px;
-      color: #C5E1A5;
+      opacity: 0;
+      animation: fadeIn 1s ease-in-out 1.5s forwards;
     }
     .table-number {
       font-family: 'Bebas Neue', sans-serif;
@@ -64,11 +96,15 @@
       font-weight: 900;
       color: #FFD700; /* Ganti dengan warna kuning gold cerah */
       text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+      opacity: 0;
+      animation: fadeIn 1s ease-in-out 2s forwards;
     }
     .time {
       margin-top: 20px;
       color: #ccc;
       font-size: 14px;
+      opacity: 0;
+      animation: fadeIn 1s ease-in-out 2.5s forwards;
     }
   </style>
 </head>
