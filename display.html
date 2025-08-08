@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Display Kehadiran</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Cinzel:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -13,7 +13,7 @@
       background-size: cover;
     }
     .overlay {
-      background-color: rgba(0, 0, 0, 0.6);
+      background-color: rgba(0, 0, 0, 0.65);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -23,32 +23,47 @@
       text-align: center;
     }
     h1 {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Cinzel', serif;
       font-size: 36px;
       font-weight: bold;
       margin-bottom: 10px;
       color: #FFE082;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
     }
     h2 {
-      font-size: 24px;
+      font-size: 22px;
       font-style: italic;
       margin-bottom: 30px;
       color: #B2EBF2;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
     }
     .company {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 32px;
+      font-family: 'Cinzel', serif;
+      font-size: 34px;
       font-weight: bold;
       margin-top: 30px;
       text-transform: uppercase;
       color: #FFCDD2;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
     }
     .table {
-      font-family: 'Courier New', Courier, monospace;
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 20px 40px;
+      border-radius: 20px;
+      border: 3px solid #FFD54F;
+      box-shadow: 0 0 25px rgba(255, 213, 79, 0.8);
+      text-align: center;
       font-size: 24px;
-      margin-top: 10px;
-      font-weight: 600;
       color: #C5E1A5;
+    }
+    .table-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 64px;
+      font-weight: 900;
+      color: #FFD700; /* Ganti dengan warna kuning gold cerah */
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
     }
     .time {
       margin-top: 20px;
@@ -62,7 +77,10 @@
     <h1>SELAMAT DATANG DI CUSTOMER GATHERING<br>GATEWAY CONTAINER LINE 2025</h1>
     <h2>"Navigating The Turbulence, Cruising The Opportunities"</h2>
     <div class="company" id="company">Menunggu scan...</div>
-    <div class="table" id="table"></div>
+    <div class="table" id="table">
+      <span>NOMOR MEJA</span>
+      <div class="table-number"></div>
+    </div>
     <div class="time" id="time"></div>
   </div>
 
@@ -90,7 +108,7 @@
       const data = snapshot.val();
       if (data) {
         document.getElementById('company').textContent = data.company.toUpperCase();
-        document.getElementById('table').textContent = "Nomor Meja: " + data.table;
+        document.querySelector('.table-number').textContent = data.table;
         document.getElementById('time').textContent = "Scan terakhir: " + new Date(data.time).toLocaleString('id-ID');
       }
     });
