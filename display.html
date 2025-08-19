@@ -5,55 +5,73 @@
   <title>Display Kehadiran</title>
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
+      font-family: 'Arial', sans-serif;
+      background: url("background.jpg") no-repeat center center fixed;
+      background-size: cover;
       color: white;
       text-align: center;
       margin: 0;
       padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    }
+
+    .overlay {
+      background: rgba(0, 0, 0, 0.6);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
     }
 
     .container {
+      position: relative;
+      z-index: 2;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 40px;
-      border-radius: 25px;
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .welcome {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .event-title {
+      font-size: 1.5em;
+      font-style: italic;
+      margin-bottom: 40px;
     }
 
     .company-name {
-      font-size: 2.8em;
-      font-weight: 600;
-      margin-bottom: 25px;
-      color: #f8fafc;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+      font-family: 'Georgia', serif;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 2px 2px 5px black;
     }
 
     .table-box {
-      font-size: 4.5em;
+      font-size: 4em;
       font-weight: bold;
-      color: #facc15;
+      color: gold;
       padding: 40px 80px;
-      border-radius: 25px;
-      background: rgba(250, 204, 21, 0.1);
-      border: 4px solid #facc15;
-      box-shadow: 0 0 25px #facc15;
+      border-radius: 20px;
+      background: rgba(255, 215, 0, 0.15);
+      border: 3px solid gold;
+      box-shadow: 0 0 20px gold;
       text-transform: uppercase;
       animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-      0% { box-shadow: 0 0 25px #facc15; }
-      50% { box-shadow: 0 0 50px #facc15; }
-      100% { box-shadow: 0 0 25px #facc15; }
+      0% { box-shadow: 0 0 20px gold; }
+      50% { box-shadow: 0 0 40px gold; }
+      100% { box-shadow: 0 0 20px gold; }
     }
 
     .hidden-input {
@@ -64,7 +82,11 @@
   </style>
 </head>
 <body>
+  <div class="overlay"></div>
   <div class="container">
+    <div class="welcome">SELAMAT DATANG DI CUSTOMER GATHERING<br>PT GATEWAY CONTAINER LINE 2025</div>
+    <div class="event-title">"Navigating The Turbulence, Cruising The Opportunities"</div>
+    
     <div id="company" class="company-name">Silakan Scan QR Code</div>
     <div id="table" class="table-box">-</div>
   </div>
