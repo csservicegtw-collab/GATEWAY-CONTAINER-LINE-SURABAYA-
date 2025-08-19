@@ -1,51 +1,57 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Customer Gathering GCL 2025</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px;
-    }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 20px;
-    }
-    .info {
-      margin-top: 20px;
-      font-size: 20px;
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Cinzel:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Selamat Datang di Customer Gathering GCL 2025</h1>
-  <p>Scan QR Code Anda untuk konfirmasi kehadiran.</p>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  <div id="info" class="info"></div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
+      authDomain: "scanner-gathering.firebaseapp.com",
+      databaseURL: "https://scanner-gathering-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "scanner-gathering",
+      storageBucket: "scanner-gathering.appspot.com",
+      messagingSenderId: "627134959703",
+      appId: "1:627134959703:web:0ae958bbd74da08dc9d312",
+      measurementId: "G-HW6Y6VN817"
+    };
 
-  <script>
-    function getParam(name) {
-      let url = new URL(window.location.href);
-      return url.searchParams.get(name);
-    }
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    const company = getParam("company");
-    const table = getParam("table");
+    // ambil data dari QR Code (param URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    const company = decodeURIComponent(urlParams.get('company') || 'PT NAMA PERUSAHAAN');
+    const table = decodeURIComponent(urlParams.get('table') || '01');
 
-    if (company && table) {
-      document.getElementById("info").innerHTML =
-        `<strong>${company}</strong><br>Nomor Meja: <strong>${table}</strong>`;
+    // simpan ke Firebase (node "latest" selalu di-overwrite)
+    const timestamp = new Date().toISOString();
+    set(ref(db, 'latest'), {
+      company: company,
+      table: table,
+      time: timestamp
+    });
 
-      // Kirim ke Google Form
-      fetch("https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse", {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `entry.111111=${company}&entry.222222=${table}`
-      });
-    }
+    // kirim juga ke Google Form
+    const formURL = "https://docs.google.com/forms/d/e/1FAIpQLScU5G2UO2TKcVffDQEjSZdQuXfq43Ldgfq-lJW9DedgRmQbqg/formResponse";
+    const formData = new FormData();
+    formData.append("entry.712340243", company);
+    formData.append("entry.1805472999", table);
+
+    fetch(formURL, {
+      method: "POST",
+      mode: "no-cors",
+      body: formData
+    });
+
+    // setelah simpan, langsung tutup halaman (biar scanner nggak menumpuk tab)
+    window.close();
   </script>
 </body>
 </html>
