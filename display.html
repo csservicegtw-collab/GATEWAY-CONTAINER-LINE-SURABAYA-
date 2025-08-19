@@ -13,11 +13,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                  url('background.jpg') no-repeat center center fixed;
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg') no-repeat center center fixed;
       background-size: cover;
       color: white;
       text-align: center;
+      position: relative;
     }
 
     /* Animasi fade-in untuk Welcome */
@@ -70,6 +70,7 @@
       font-size: 90px;
       font-weight: bold;
       color: #FFD700;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
     }
 
     .watermark {
@@ -101,24 +102,47 @@
   <div class="watermark">Tim Bjir</div>
 
   <script>
-    // Ambil parameter dari URL
+    // Mode 1: ambil langsung dari URL (jika akses via link dengan parameter)
     function getQueryParams() {
       const urlParams = new URLSearchParams(window.location.search);
       return {
-        company: urlParams.get("company") ? decodeURIComponent(urlParams.get("company")) : "Nama Perusahaan",
-        table: urlParams.get("table") ? decodeURIComponent(urlParams.get("table")) : "--"
+        company: urlParams.get("company") || "Nama Perusahaan",
+        table: urlParams.get("table") || "--"
       };
     }
 
-    // Update data di halaman
-    function updateDisplay() {
-      const params = getQueryParams();
+    function updateDisplay(params) {
       document.getElementById("company").textContent = params.company;
       document.getElementById("table-number").textContent = params.table;
     }
 
-    // Jalankan saat load
-    window.onload = updateDisplay;
+    // Mode 2: jika QR scanner input text (simulate keyboard input)
+    document.addEventListener("DOMContentLoaded", () => {
+      let buffer = "";
+      document.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          processScan(buffer.trim());
+          buffer = "";
+        } else {
+          buffer += e.key;
+        }
+      });
+
+      // default load dari URL param
+      updateDisplay(getQueryParams());
+    });
+
+    function processScan(data) {
+      try {
+        const urlParams = new URLSearchParams(data.split("?")[1]);
+        const company = urlParams.get("company") || "TIDAK DIKENAL";
+        const table = urlParams.get("table") || "--";
+
+        updateDisplay({ company: company.toUpperCase(), table });
+      } catch (err) {
+        console.error("Scan gagal:", err);
+      }
+    }
   </script>
 </body>
 </html>
