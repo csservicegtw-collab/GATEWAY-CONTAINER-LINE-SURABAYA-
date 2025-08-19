@@ -2,96 +2,57 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Display Kehadiran</title>
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@500&display=swap" rel="stylesheet">
-
   <style>
     body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0f172a; /* navy gelap */
+      background: black;
       color: white;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    .container {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       text-align: center;
-      animation: fadeIn 0.8s ease;
     }
-
-    .company-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 3rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      color: #f1f5f9;
-      letter-spacing: 2px;
+    #company {
+      font-size: 42px;
+      font-weight: bold;
+      margin-bottom: 30px;
+      color: white;
     }
-
-    .table-number {
-      font-size: 6rem;
-      font-weight: 700;
-      text-transform: uppercase;
+    #table {
+      font-size: 80px;
+      font-weight: bold;
       padding: 20px 40px;
-      border-radius: 20px;
-      display: inline-block;
-      background: linear-gradient(145deg, #b8860b, #ffd700, #f9e076);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0px 0px 15px rgba(255, 215, 0, 0.6);
-      font-family: 'Poppins', sans-serif;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
+      border-radius: 12px;
+      background: linear-gradient(45deg, #FFD700, #FFA500);
+      color: black;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="company-name" id="companyName">Menunggu Scan...</div>
-    <div class="table-number" id="tableNumber">--</div>
-  </div>
+  <div id="company">Menunggu scan...</div>
+  <div id="table"></div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSy....",   // isi sesuai project mas
-      authDomain: "scanner-gathering.firebaseapp.com",
-      databaseURL: "https://scanner-gathering-default-rtdb.firebaseio.com/",
-      projectId: "scanner-gathering",
-      storageBucket: "scanner-gathering.appspot.com",
-      messagingSenderId: "xxx",
-      appId: "xxx"
-    };
+    // Display akan langsung update setiap ada QR baru discan
+    window.addEventListener("DOMContentLoaded", () => {
+      function updateDisplay() {
+        let url = new URL(window.location.href);
+        let company = url.searchParams.get("company");
+        let table = url.searchParams.get("table");
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // Ambil scan terakhir
-    const scanRef = db.ref("scans/last");
-
-    scanRef.on("value", (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        document.getElementById("companyName").textContent = data.company || "Tidak diketahui";
-        document.getElementById("tableNumber").textContent = "MEJA " + (data.table || "--");
-        
-        // Animasi setiap kali update
-        document.querySelector(".container").style.animation = "none";
-        setTimeout(() => {
-          document.querySelector(".container").style.animation = "fadeIn 0.8s ease";
-        }, 10);
+        if (company && table) {
+          document.getElementById("company").textContent = company;
+          document.getElementById("table").textContent = table;
+        }
       }
+
+      updateDisplay();
+
+      // Auto refresh jika ada URL baru dari scanner
+      window.addEventListener("focus", updateDisplay);
     });
   </script>
 </body>
