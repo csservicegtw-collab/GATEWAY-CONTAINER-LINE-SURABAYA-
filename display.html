@@ -5,73 +5,60 @@
   <title>Display Kehadiran</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background: url("background.jpg") no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      text-align: center;
       margin: 0;
       padding: 0;
-    }
-
-    .overlay {
-      background: rgba(0, 0, 0, 0.6);
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .container {
-      position: relative;
-      z-index: 2;
+      font-family: 'Georgia', serif;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-align: center;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      padding: 20px;
     }
 
-    .welcome {
-      font-size: 2em;
+    .welcome-text {
+      font-size: 40px;
       font-weight: bold;
-      margin-bottom: 10px;
-      text-transform: uppercase;
+      margin-bottom: 15px;
+      color: #f8f8f8;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
     }
 
     .event-title {
-      font-size: 1.5em;
+      font-size: 36px;
       font-style: italic;
       margin-bottom: 40px;
+      color: #e0e0e0;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
     }
 
     .company-name {
-      font-family: 'Georgia', serif;
-      font-size: 2.5em;
+      font-size: 32px;
       margin-bottom: 20px;
-      color: #fff;
-      text-shadow: 2px 2px 5px black;
+      color: #ffffff;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
     }
 
     .table-box {
-      font-size: 4em;
+      font-size: 52px;
       font-weight: bold;
-      color: gold;
-      padding: 40px 80px;
+      color: #ffe066;
+      padding: 30px 70px;
       border-radius: 20px;
-      background: rgba(255, 215, 0, 0.15);
-      border: 3px solid gold;
-      box-shadow: 0 0 20px gold;
+      background: rgba(255, 215, 0, 0.1);
+      border: 3px solid #ffe066;
+      box-shadow: 0 0 25px #ffe066;
       text-transform: uppercase;
       animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-      0% { box-shadow: 0 0 20px gold; }
-      50% { box-shadow: 0 0 40px gold; }
-      100% { box-shadow: 0 0 20px gold; }
+      0% { box-shadow: 0 0 20px #ffe066; }
+      50% { box-shadow: 0 0 45px #ffe066; }
+      100% { box-shadow: 0 0 20px #ffe066; }
     }
 
     .hidden-input {
@@ -82,16 +69,16 @@
   </style>
 </head>
 <body>
-  <div class="overlay"></div>
-  <div class="container">
-    <div class="welcome">SELAMAT DATANG DI CUSTOMER GATHERING<br>PT GATEWAY CONTAINER LINE 2025</div>
-    <div class="event-title">"Navigating The Turbulence, Cruising The Opportunities"</div>
-    
-    <div id="company" class="company-name">Silakan Scan QR Code</div>
-    <div id="table" class="table-box">-</div>
+  <div class="welcome-text">
+    SELAMAT DATANG DI CUSTOMER GATHERING <br> PT GATEWAY CONTAINER LINE 2025
   </div>
+  <div class="event-title">
+    "Navigating The Turbulence, Cruising The Opportunities"
+  </div>
+  <div id="company" class="company-name">Silakan Scan QR Code</div>
+  <div id="table" class="table-box">-</div>
 
-  <!-- Input hidden agar Scanner eksternal bisa ketik otomatis -->
+  <!-- Input hidden untuk scanner -->
   <input type="text" id="scannerInput" class="hidden-input" autofocus />
 
   <script>
@@ -99,24 +86,21 @@
     const companyDiv = document.getElementById("company");
     const tableDiv = document.getElementById("table");
 
-    // Fokus otomatis ke input agar scanner bisa langsung ketik
+    // Fokus otomatis ke input
     window.onload = () => {
       input.focus();
     };
 
-    // Kalau user klik layar, tetap balikin fokus ke input
     document.body.addEventListener("click", () => {
       input.focus();
     });
 
-    // Saat scanner "enter" (akhir scan), tampilkan hasil
     input.addEventListener("keypress", function(e) {
       if (e.key === "Enter") {
         const scanned = input.value.trim();
         input.value = "";
 
         try {
-          // Ambil parameter dari QR Code link (misal ?company=Gateway&table=12)
           const urlParams = new URLSearchParams(new URL(scanned).search);
           const company = urlParams.get("company") || "Tidak Dikenal";
           const table = urlParams.get("table") || "-";
