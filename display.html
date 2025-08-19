@@ -102,47 +102,120 @@
   <div class="watermark">Tim Bjir</div>
 
   <script>
-    // Mode 1: ambil langsung dari URL (jika akses via link dengan parameter)
-    function getQueryParams() {
-      const urlParams = new URLSearchParams(window.location.search);
-      return {
-        company: urlParams.get("company") || "Nama Perusahaan",
-        table: urlParams.get("table") || "--"
-      };
-    }
-
-    function updateDisplay(params) {
-      document.getElementById("company").textContent = params.company;
-      document.getElementById("table-number").textContent = params.table;
-    }
-
-    // Mode 2: jika QR scanner input text (simulate keyboard input)
-    document.addEventListener("DOMContentLoaded", () => {
-      let buffer = "";
-      document.addEventListener("keydown", e => {
-        if (e.key === "Enter") {
-          processScan(buffer.trim());
-          buffer = "";
-        } else {
-          buffer += e.key;
-        }
-      });
-
-      // default load dari URL param
-      updateDisplay(getQueryParams());
-    });
-
-    function processScan(data) {
+    // --- UTIL: Ambil parameter dari URL halaman (jika dibuka via link dengan query) ---
+    function getQueryParamsFromLocation() {
       try {
-        const urlParams = new URLSearchParams(data.split("?")[1]);
-        const company = urlParams.get("company") || "TIDAK DIKENAL";
-        const table = urlParams.get("table") || "--";
-
-        updateDisplay({ company: company.toUpperCase(), table });
-      } catch (err) {
-        console.error("Scan gagal:", err);
+        const urlParams = new URLSearchParams(window.location.search || "");
+        return {
+          company: (urlParams.get("company") || "Nama Perusahaan").toString(),
+          table: (urlParams.get("table") || "--").toString()
+        };
+      } catch {
+        return { company: "Nama Perusahaan", table: "--" };
       }
     }
+
+    // --- UTIL: Parsing string hasil scan jadi {company, table} yang aman ---
+    function parseScanToParams(data) {
+      // Normalisasi: trim & buang karakter kontrol
+      const raw = (data || "").replace(/\s+$/g, "").trim();
+      if (!raw) return null;
+
+      let qs = "";
+
+      // Kasus 1: URL lengkap -> ambil .search
+      try {
+        // Tambah protokol jika perlu agar URL() tidak error
+        const maybeUrl = raw.match(/^[a-zA-Z]+:\/\//) ? raw : ("http://" + raw);
+        const u = new URL(maybeUrl);
+        qs = u.search || "";
+      } catch {
+        // Bukan URL valid
+      }
+
+      // Kasus 2: ada tanda ? langsung
+      if (!qs && raw.includes("?")) {
+        qs = raw.slice(raw.indexOf("?"));
+      }
+
+      // Kasus 3: sudah berupa query string saja (mengandung '=')
+      if (!qs && raw.includes("=")) {
+        qs = "?" + raw;
+      }
+
+      // Jika sudah punya query string -> pakai URLSearchParams
+      if (qs) {
+        const usp = new URLSearchParams(qs.startsWith("?") ? qs.slice(1) : qs);
+        const company = usp.get("company");
+        const table = usp.get("table");
+        if (company || table) {
+          return {
+            company: (company || "TIDAK DIKENAL").toString(),
+            table: (table || "--").toString()
+          };
+        }
+      }
+
+      // Kasus 4: kalau ternyata hanya angka -> anggap itu nomor meja
+      if (/^\d{1,4}$/.test(raw)) {
+        return { company: "TIDAK DIKENAL", table: raw };
+      }
+
+      // Kasus 5: fallback: format "NAMA|MEJA" atau "NAMA,MEJA"
+      const parts = raw.split(/[|,;]\s*/);
+      if (parts.length >= 2 && /^\d{1,4}$/.test(parts[1])) {
+        return { company: parts[0], table: parts[1] };
+      }
+
+      // Gagal parse
+      return null;
+    }
+
+    // --- Update tampilan (aman terhadap null element) ---
+    function updateDisplay(params) {
+      const companyEl = document.getElementById("company");
+      const tableEl = document.getElementById("table-number");
+      if (companyEl && params.company) companyEl.textContent = params.company.toUpperCase();
+      if (tableEl && params.table)  tableEl.textContent = params.table;
+    }
+
+    // --- INIT: set dari URL saat load ---
+    document.addEventListener("DOMContentLoaded", () => {
+      updateDisplay(getQueryParamsFromLocation());
+
+      // Mode Scanner: tangkap ketikan scanner (keyboard wedge)
+      let buffer = "";
+      const allowed = /[0-9A-Za-zÀ-ž .,_\-@#:/?&=%+]/; // karakter umum URL/teks
+
+      document.addEventListener("keydown", (e) => {
+        // Enter = akhir scan
+        if (e.key === "Enter") {
+          const parsed = parseScanToParams(buffer);
+          buffer = "";
+          if (parsed) updateDisplay(parsed);
+          return;
+        }
+
+        // Backspace: hapus 1 char dari buffer
+        if (e.key === "Backspace") {
+          buffer = buffer.slice(0, -1);
+          return;
+        }
+
+        // Abaikan tombol kontrol (Shift/Alt/Ctrl/Arrow/Function dll)
+        if (e.key.length !== 1) return;
+
+        // Hanya terima karakter yang umum
+        if (allowed.test(e.key)) buffer += e.key;
+      });
+
+      // Mode Paste: beberapa scanner melakukan paste + Enter
+      document.addEventListener("paste", (e) => {
+        const text = (e.clipboardData || window.clipboardData).getData("text");
+        const parsed = parseScanToParams(text);
+        if (parsed) updateDisplay(parsed);
+      });
+    });
   </script>
 </body>
 </html>
