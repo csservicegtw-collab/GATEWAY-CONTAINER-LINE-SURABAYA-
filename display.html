@@ -1,108 +1,125 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Display Kehadiran</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Font sama dengan index -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Cinzel:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      font-family: 'Poppins', sans-serif;
-      color: white;
-      overflow: hidden;
+      font-family: 'Open Sans', sans-serif;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
     }
-    .container {
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.65);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
       text-align: center;
-      padding: 40px;
-      border-radius: 20px;
-      background: rgba(0, 0, 0, 0.5);
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
-      animation: fadeIn 1s ease-out;
+    }
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #FFE082;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+    }
+    h2 {
+      font-size: 22px;
+      font-style: italic;
+      margin-bottom: 30px;
+      color: #B2EBF2;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
     }
     .company {
-      font-size: 2.5em;
-      font-weight: 600;
-      margin-bottom: 20px;
-      font-family: 'Playfair Display', serif;
-      color: #FFD700;
+      font-family: 'Cinzel', serif;
+      font-size: 34px;
+      font-weight: bold;
+      margin-top: 30px;
+      text-transform: uppercase;
+      color: #FFCDD2;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
+    }
+    .table {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 20px 40px;
+      border-radius: 20px;
+      border: 3px solid #FFD54F;
+      box-shadow: 0 0 25px rgba(255, 213, 79, 0.8);
+      text-align: center;
+      animation: fadeIn 0.8s ease-out;
+    }
+    .table span {
+      font-size: 24px;
+      display: block;
+      margin-bottom: -5px;
+      color: #fff;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     .table-number {
-      font-size: 6em;
-      font-weight: bold;
-      color: #fff;
-      background: #FFD700;
-      border-radius: 25px;
-      padding: 20px 50px;
-      display: inline-block;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 72px;
+      font-weight: 900;
+      color: #FFD700;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
       animation: pulse 1.5s infinite;
-      font-family: 'Playfair Display', serif;
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
     }
-    input {
-      opacity: 0;
-      position: absolute;
-    }
-
-    /* Animasi muncul */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(50px); }
-      to { opacity: 1; transform: translateY(0); }
+    .team {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #ccc;
     }
 
-    /* Animasi bounce/pulse */
+    /* Animasi */
     @keyframes pulse {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.1); }
+      50% { transform: scale(1.15); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="companyName" class="company">Silakan Scan QR Code</div>
-    <div id="tableNumber" class="table-number">-</div>
+  <div class="overlay">
+    <h1>SELAMAT DATANG DI CUSTOMER GATHERING<br>GATEWAY CONTAINER LINE 2025</h1>
+    <h2>"Navigating The Turbulence, Cruising The Opportunities"</h2>
+    <div class="company" id="company">MENUNGGU SCAN...</div>
+    <div class="table" id="table">
+      <span>NOMOR MEJA</span>
+      <div class="table-number" id="tableNumber">--</div>
+    </div>
+    <div class="team">Team Event</div>
   </div>
 
-  <!-- Hidden input untuk hasil scan -->
-  <input type="text" id="scannerInput" autofocus>
-
   <script>
-    const input = document.getElementById("scannerInput");
-    const companyEl = document.getElementById("companyName");
-    const tableEl = document.getElementById("tableNumber");
+    // Ambil data dari localStorage (update otomatis saat ada scan baru)
+    function updateDisplay() {
+      const scanned = localStorage.getItem("lastScan");
+      if (scanned) {
+        const params = new URLSearchParams(scanned.split("?")[1]);
+        const company = params.get("company") || "TIDAK DIKENAL";
+        const table = params.get("table") || "--";
 
-    // Fokus otomatis agar scanner bisa input
-    window.onload = () => input.focus();
-    window.onfocus = () => input.focus();
-
-    input.addEventListener("keypress", function(e) {
-      if (e.key === "Enter") {
-        const scanned = input.value.trim();
-        input.value = "";
-
-        if (scanned) {
-          // Format QR Code: ?company=Gateway&table=12
-          const params = new URLSearchParams(scanned.split("?")[1]);
-          const company = params.get("company") || "TIDAK DIKENAL";
-          const table = params.get("table") || "-";
-
-          companyEl.textContent = company;
-          tableEl.textContent = table;
-
-          // Kirim ke Google Form otomatis
-          fetch("https://docs.google.com/forms/d/e/FORM_ID/formResponse", {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `entry.1234567890=${company}&entry.0987654321=${table}`
-          });
-        }
+        document.getElementById("company").textContent = company.toUpperCase();
+        document.getElementById("tableNumber").textContent = table;
       }
-    });
+    }
+
+    // Cek perubahan setiap 1 detik
+    setInterval(updateDisplay, 1000);
   </script>
 </body>
 </html>
