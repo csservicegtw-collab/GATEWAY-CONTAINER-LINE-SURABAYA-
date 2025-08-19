@@ -13,7 +13,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg') no-repeat center center fixed;
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                  url('background.jpg') no-repeat center center fixed;
       background-size: cover;
       color: white;
       text-align: center;
@@ -42,9 +43,9 @@
     }
 
     .company {
-      font-size: 40px;
+      font-size: 44px;
       color: #98c732;
-      margin-top: 40px;
+      margin-top: 60px;
       font-weight: bold;
       text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
     }
@@ -60,13 +61,13 @@
     }
 
     .table-text {
-      font-size: 26px;
+      font-size: 28px;
       margin-bottom: 10px;
       color: white;
     }
 
     .table-number {
-      font-size: 70px;
+      font-size: 90px;
       font-weight: bold;
       color: #FFD700;
     }
@@ -100,23 +101,24 @@
   <div class="watermark">Tim Bjir</div>
 
   <script>
-    // Fungsi ambil query dari URL
+    // Ambil parameter dari URL
     function getQueryParams() {
       const urlParams = new URLSearchParams(window.location.search);
       return {
-        company: urlParams.get("company") || "Nama Perusahaan",
-        table: urlParams.get("table") || "--"
+        company: urlParams.get("company") ? decodeURIComponent(urlParams.get("company")) : "Nama Perusahaan",
+        table: urlParams.get("table") ? decodeURIComponent(urlParams.get("table")) : "--"
       };
     }
 
+    // Update data di halaman
     function updateDisplay() {
       const params = getQueryParams();
       document.getElementById("company").textContent = params.company;
       document.getElementById("table-number").textContent = params.table;
     }
 
-    // Update saat halaman load
-    updateDisplay();
+    // Jalankan saat load
+    window.onload = updateDisplay;
   </script>
 </body>
 </html>
