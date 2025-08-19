@@ -1,155 +1,96 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Display Kehadiran</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Cinzel:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@500&display=swap" rel="stylesheet">
+
   <style>
     body {
       margin: 0;
-      font-family: 'Open Sans', sans-serif;
-      background: url('background.jpg') no-repeat center center fixed;
-      background-size: cover;
-    }
-    .overlay {
-      background-color: rgba(0, 0, 0, 0.75);
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 40px 20px;
+      background: #0f172a; /* navy gelap */
+      color: white;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .container {
       text-align: center;
-      opacity: 0;
-      animation: fadeIn 1s forwards;
+      animation: fadeIn 0.8s ease;
     }
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-    h1 {
-      font-family: 'Cinzel', serif;
-      font-size: 36px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #FFE082;
-      text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
-      animation: slideIn 1s ease-in-out forwards;
-    }
-    @keyframes slideIn {
-      from {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-    h2 {
-      font-size: 22px;
-      font-style: italic;
-      margin-bottom: 30px;
-      color: #B2EBF2;
-      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
-      animation: slideIn 1s ease-in-out 0.5s forwards;
-    }
-    .company {
-      font-family: 'Cinzel', serif;
-      font-size: 34px;
-      font-weight: bold;
-      margin-top: 30px;
-      text-transform: uppercase;
-      color: #FFCDD2;
+
+    .company-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #f1f5f9;
       letter-spacing: 2px;
-      text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
-      opacity: 0;
-      animation: fadeIn 1s ease-in-out 1s forwards, glow 1.5s infinite alternate;
     }
-    @keyframes glow {
-      from {
-        text-shadow: 0 0 5px rgba(255, 221, 51, 0.5);
-      }
-      to {
-        text-shadow: 0 0 20px rgba(255, 221, 51, 1);
-      }
-    }
-    .table {
-      margin-top: 20px;
-      background: rgba(255, 255, 255, 0.1);
+
+    .table-number {
+      font-size: 6rem;
+      font-weight: 700;
+      text-transform: uppercase;
       padding: 20px 40px;
       border-radius: 20px;
-      border: 3px solid #FFD54F;
-      box-shadow: 0 0 25px rgba(255, 213, 79, 0.8);
-      text-align: center;
-      opacity: 0;
-      animation: fadeIn 1s ease-in-out 1.5s forwards;
+      display: inline-block;
+      background: linear-gradient(145deg, #b8860b, #ffd700, #f9e076);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0px 0px 15px rgba(255, 215, 0, 0.6);
+      font-family: 'Poppins', sans-serif;
     }
-    .table > span {
-      color: #FFD700; /* warna kuning gold */
-      font-weight: bold; /* lebih tebal */
-    }
-    .table-number {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 64px;
-      font-weight: 900;
-      color: #FFD700; /* Ganti dengan warna kuning gold cerah */
-      text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
-      opacity: 0;
-      animation: fadeIn 1s ease-in-out 2s forwards;
-    }
-    .time {
-      margin-top: 20px;
-      color: #ccc;
-      font-size: 14px;
-      opacity: 0;
-      animation: fadeIn 1s ease-in-out 2.5s forwards;
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <div class="overlay">
-    <h1>SELAMAT DATANG DI CUSTOMER GATHERING<br>GATEWAY CONTAINER LINE 2025</h1>
-    <h2>"Navigating The Turbulence, Cruising The Opportunities"</h2>
-    <div class="company" id="company">Menunggu scan...</div>
-    <div class="table" id="table">
-      <span>NOMOR MEJA</span>
-      <div class="table-number"></div>
-    </div>
-    <div class="time" id="time"></div>
+  <div class="container">
+    <div class="company-name" id="companyName">Menunggu Scan...</div>
+    <div class="table-number" id="tableNumber">--</div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
+  <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
+      apiKey: "AIzaSy....",   // isi sesuai project mas
       authDomain: "scanner-gathering.firebaseapp.com",
-      databaseURL: "https://scanner-gathering-default-rtdb.asia-southeast1.firebasedatabase.app",
+      databaseURL: "https://scanner-gathering-default-rtdb.firebaseio.com/",
       projectId: "scanner-gathering",
       storageBucket: "scanner-gathering.appspot.com",
-      messagingSenderId: "627134959703",
-      appId: "1:627134959703:web:0ae958bbd74da08dc9d312",
-      measurementId: "G-HW6Y6VN817"
+      messagingSenderId: "xxx",
+      appId: "xxx"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const scannedRef = ref(db, 'scanned');
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    onValue(scannedRef, (snapshot) => {
+    // Ambil scan terakhir
+    const scanRef = db.ref("scans/last");
+
+    scanRef.on("value", (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        document.getElementById('company').textContent = data.company.toUpperCase();
-        document.querySelector('.table-number').textContent = data.table;
-        document.getElementById('time').textContent = "Scan terakhir: " + new Date(data.time).toLocaleString('id-ID');
+        document.getElementById("companyName").textContent = data.company || "Tidak diketahui";
+        document.getElementById("tableNumber").textContent = "MEJA " + (data.table || "--");
+        
+        // Animasi setiap kali update
+        document.querySelector(".container").style.animation = "none";
+        setTimeout(() => {
+          document.querySelector(".container").style.animation = "fadeIn 0.8s ease";
+        }, 10);
       }
     });
   </script>
