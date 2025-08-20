@@ -20,18 +20,37 @@
       position: relative;
     }
 
-    /* Animasi fade-in untuk Welcome */
+    /* Welcome dengan per huruf berkilau */
     .welcome {
       font-size: 48px;
       font-weight: bold;
       color: #FFD700;
       margin-top: 40px;
       opacity: 0;
-      animation: fadeIn 3s ease forwards;
+      animation: fadeIn 2s ease forwards;
+    }
+
+    .welcome span {
+      display: inline-block;
+      opacity: 0.8;
+      animation: shimmer 2s infinite;
+    }
+
+    .welcome span:nth-child(odd) {
+      animation-delay: 0.2s;
+    }
+
+    .welcome span:nth-child(even) {
+      animation-delay: 0.4s;
     }
 
     @keyframes fadeIn {
       to { opacity: 1; }
+    }
+
+    @keyframes shimmer {
+      0%, 100% { text-shadow: none; opacity: 0.8; }
+      50% { text-shadow: 0 0 10px #fff, 0 0 20px #FFD700; opacity: 1; }
     }
 
     .title {
@@ -80,12 +99,35 @@
       color: white;
       opacity: 0.7;
     }
+
+    /* Tampilan standby (Silahkan Scan) */
+    #standby {
+      display: none;
+      margin-top: 100px;
+      font-size: 32px;
+      font-weight: bold;
+      color: #FFD700;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+    }
+
+    .loader {
+      border: 5px solid rgba(255,255,255,0.2);
+      border-top: 5px solid #FFD700;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin: 20px auto;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
-  <div class="welcome">
-    SELAMAT DATANG DI CUSTOMER GATHERING <br>
-    GATEWAY CONTAINER LINE SURABAYA 2025
+  <div class="welcome" id="welcome">
+    <!-- Akan diisi per huruf lewat JS -->
   </div>
 
   <div class="title">
@@ -94,15 +136,33 @@
 
   <div class="company" id="company">Nama Perusahaan</div>
 
-  <div class="table-box">
+  <div class="table-box" id="table-box">
     <div class="table-text">Nomor Meja</div>
     <div class="table-number" id="table-number">--</div>
+  </div>
+
+  <div id="standby">
+    Silahkan Scan Barcode Anda
+    <div class="loader"></div>
   </div>
 
   <div class="watermark">Tim Bjir</div>
 
   <script>
-    // --- UTIL: Ambil parameter dari URL halaman (jika dibuka via link dengan query) ---
+    // --- Buat Welcome jadi per huruf ---
+    const welcomeEl = document.getElementById("welcome");
+    const welcomeText = "SELAMAT DATANG DI CUSTOMER GATHERING \nGATEWAY CONTAINER LINE SURABAYA 2025";
+    welcomeText.split("").forEach(char => {
+      const span = document.createElement("span");
+      span.textContent = char;
+      if (char === "\n") {
+        welcomeEl.appendChild(document.createElement("br"));
+      } else {
+        welcomeEl.appendChild(span);
+      }
+    });
+
+    // --- Fungsi Ambil query dari URL ---
     function getQueryParamsFromLocation() {
       try {
         const urlParams = new URLSearchParams(window.location.search || "");
@@ -115,107 +175,78 @@
       }
     }
 
-    // --- UTIL: Parsing string hasil scan jadi {company, table} yang aman ---
     function parseScanToParams(data) {
-      // Normalisasi: trim & buang karakter kontrol
-      const raw = (data || "").replace(/\s+$/g, "").trim();
+      const raw = (data || "").trim();
       if (!raw) return null;
-
       let qs = "";
 
-      // Kasus 1: URL lengkap -> ambil .search
       try {
-        // Tambah protokol jika perlu agar URL() tidak error
         const maybeUrl = raw.match(/^[a-zA-Z]+:\/\//) ? raw : ("http://" + raw);
         const u = new URL(maybeUrl);
         qs = u.search || "";
-      } catch {
-        // Bukan URL valid
-      }
+      } catch {}
 
-      // Kasus 2: ada tanda ? langsung
-      if (!qs && raw.includes("?")) {
-        qs = raw.slice(raw.indexOf("?"));
-      }
+      if (!qs && raw.includes("?")) qs = raw.slice(raw.indexOf("?"));
+      if (!qs && raw.includes("=")) qs = "?" + raw;
 
-      // Kasus 3: sudah berupa query string saja (mengandung '=')
-      if (!qs && raw.includes("=")) {
-        qs = "?" + raw;
-      }
-
-      // Jika sudah punya query string -> pakai URLSearchParams
       if (qs) {
         const usp = new URLSearchParams(qs.startsWith("?") ? qs.slice(1) : qs);
         const company = usp.get("company");
         const table = usp.get("table");
-        if (company || table) {
-          return {
-            company: (company || "TIDAK DIKENAL").toString(),
-            table: (table || "--").toString()
-          };
-        }
+        if (company || table) return { company: company || "TIDAK DIKENAL", table: table || "--" };
       }
 
-      // Kasus 4: kalau ternyata hanya angka -> anggap itu nomor meja
-      if (/^\d{1,4}$/.test(raw)) {
-        return { company: "TIDAK DIKENAL", table: raw };
-      }
-
-      // Kasus 5: fallback: format "NAMA|MEJA" atau "NAMA,MEJA"
+      if (/^\d{1,4}$/.test(raw)) return { company: "TIDAK DIKENAL", table: raw };
       const parts = raw.split(/[|,;]\s*/);
-      if (parts.length >= 2 && /^\d{1,4}$/.test(parts[1])) {
-        return { company: parts[0], table: parts[1] };
-      }
-
-      // Gagal parse
+      if (parts.length >= 2 && /^\d{1,4}$/.test(parts[1])) return { company: parts[0], table: parts[1] };
       return null;
     }
 
-    // --- Update tampilan (aman terhadap null element) ---
     function updateDisplay(params) {
-      const companyEl = document.getElementById("company");
-      const tableEl = document.getElementById("table-number");
-      if (companyEl && params.company) companyEl.textContent = params.company.toUpperCase();
-      if (tableEl && params.table)  tableEl.textContent = params.table;
+      document.getElementById("company").textContent = params.company.toUpperCase();
+      document.getElementById("table-number").textContent = params.table;
+
+      // Reset timer kalau ada scan
+      resetInactivityTimer();
+      document.getElementById("table-box").style.display = "block";
+      document.getElementById("standby").style.display = "none";
     }
 
-    // --- INIT: set dari URL saat load ---
     document.addEventListener("DOMContentLoaded", () => {
       updateDisplay(getQueryParamsFromLocation());
-
-      // Mode Scanner: tangkap ketikan scanner (keyboard wedge)
       let buffer = "";
-      const allowed = /[0-9A-Za-zÀ-ž .,_\-@#:/?&=%+]/; // karakter umum URL/teks
+      const allowed = /[0-9A-Za-zÀ-ž .,_\-@#:/?&=%+]/;
 
       document.addEventListener("keydown", (e) => {
-        // Enter = akhir scan
         if (e.key === "Enter") {
           const parsed = parseScanToParams(buffer);
           buffer = "";
           if (parsed) updateDisplay(parsed);
           return;
         }
-
-        // Backspace: hapus 1 char dari buffer
-        if (e.key === "Backspace") {
-          buffer = buffer.slice(0, -1);
-          return;
-        }
-
-        // Abaikan tombol kontrol (Shift/Alt/Ctrl/Arrow/Function dll)
+        if (e.key === "Backspace") { buffer = buffer.slice(0, -1); return; }
         if (e.key.length !== 1) return;
-
-        // Hanya terima karakter yang umum
         if (allowed.test(e.key)) buffer += e.key;
       });
 
-      // Mode Paste: beberapa scanner melakukan paste + Enter
       document.addEventListener("paste", (e) => {
         const text = (e.clipboardData || window.clipboardData).getData("text");
         const parsed = parseScanToParams(text);
         if (parsed) updateDisplay(parsed);
       });
     });
+
+    // --- Timer Inaktivitas: 10 detik ---
+    let inactivityTimer;
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        document.getElementById("table-box").style.display = "none";
+        document.getElementById("standby").style.display = "block";
+      }, 10000); // 10 detik
+    }
+
+    resetInactivityTimer(); // mulai awal
   </script>
 </body>
 </html>
