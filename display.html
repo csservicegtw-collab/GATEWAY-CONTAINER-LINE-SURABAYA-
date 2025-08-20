@@ -39,7 +39,7 @@
       color: #FFD700;
       margin-bottom: 20px;
       display: inline-block;
-      white-space: pre-line; /* menjaga spasi antar kata */
+      white-space: pre-line; /* menjaga spasi & baris welcome */
       background: linear-gradient(90deg, #FFD700, #ffffff, #FFD700);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -106,18 +106,106 @@ GATEWAY CONTAINER LINE SURABAYA 2025</div>
   </div>
   <div class="watermark">Tim Bjir</div>
 
-  <script>
-    // Simulasi pembaruan realtime (misalnya dari Firebase)
-    // Ganti dengan integrasi Firebase Realtime Database Anda
+  <!-- ===== Real-time 2 Device (Firebase Listener) ===== -->
+  <script type="module">
+    // Import Firebase v9 (modular)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    // === Pakai konfigurasi yang sama dengan halaman pemindai (index) ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
+      authDomain: "scanner-gathering.firebaseapp.com",
+      databaseURL: "https://scanner-gathering-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "scanner-gathering",
+      storageBucket: "scanner-gathering.appspot.com",
+      messagingSenderId: "627134959703",
+      appId: "1:627134959703:web:0ae958bbd74da08dc9d312",
+      measurementId: "G-HW6Y6VN817"
+    };
+
+    // Init
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+
+    // Elemen UI
+    const companyEl = document.getElementById("companyName");
+    const tableEl   = document.getElementById("tableNumber");
+
+    // Helper: update tampilan
     function updateDisplay(company, table) {
-      document.getElementById("companyName").textContent = company;
-      document.getElementById("tableNumber").textContent = table;
+      if (company) companyEl.textContent = company.toUpperCase();
+      if (table)   tableEl.textContent   = table;
     }
 
-    // contoh simulasi: setelah 3 detik update company & table
-    setTimeout(() => {
-      updateDisplay("PT Gateway Container Line", "12");
-    }, 3000);
+    // 1) Set nilai awal dari query string (kalau ada)
+    try {
+      const usp = new URLSearchParams(location.search || "");
+      const qCompany = usp.get("company");
+      const qTable   = usp.get("table");
+      if (qCompany || qTable) {
+        updateDisplay(qCompany || "Nama Perusahaan", qTable || "0");
+      }
+    } catch {}
+
+    // 2) Dengarkan perubahan realtime pada path 'scanned'
+    //    Halaman pemindai menulis ke path ini setiap ada scan baru.
+    const scannedRef = ref(db, "scanned");
+    onValue(scannedRef, (snap) => {
+      const data = snap.val() || {};
+      // Pastikan update cepat & tanpa reload
+      updateDisplay(data.company || "Nama Perusahaan", data.table || "0");
+    });
+
+    // 3) Fallback tambahan (opsional): jika scanner keyboard wedge dicolok langsung ke laptop display,
+    //    tetap bisa menangkap input dan mem-parsing link/query.
+    let buffer = "";
+    const allowed = /[0-9A-Za-zÀ-ž .,_\-@#:/?&=%+]/;
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const parsed = parseScanToParams(buffer);
+        buffer = "";
+        if (parsed) updateDisplay(parsed.company, parsed.table);
+        return;
+      }
+      if (e.key === "Backspace") { buffer = buffer.slice(0, -1); return; }
+      if (e.key.length !== 1) return;
+      if (allowed.test(e.key)) buffer += e.key;
+    });
+
+    document.addEventListener("paste", (e) => {
+      const text = (e.clipboardData || window.clipboardData).getData("text");
+      const parsed = parseScanToParams(text);
+      if (parsed) updateDisplay(parsed.company, parsed.table);
+    });
+
+    // Parser sederhana untuk fallback keyboard/paste
+    function parseScanToParams(data) {
+      const raw = (data || "").trim();
+      if (!raw) return null;
+      let qs = "";
+
+      try {
+        const maybeUrl = raw.match(/^[a-zA-Z]+:\/\//) ? raw : ("http://" + raw);
+        const u = new URL(maybeUrl);
+        qs = u.search || "";
+      } catch {}
+
+      if (!qs && raw.includes("?")) qs = raw.slice(raw.indexOf("?"));
+      if (!qs && raw.includes("=")) qs = "?" + raw;
+
+      if (qs) {
+        const usp = new URLSearchParams(qs.startsWith("?") ? qs.slice(1) : qs);
+        const company = usp.get("company");
+        const table   = usp.get("table");
+        if (company || table) return { company: company || "TIDAK DIKENAL", table: table || "0" };
+      }
+
+      if (/^\d{1,4}$/.test(raw)) return { company: "TIDAK DIKENAL", table: raw };
+      const parts = raw.split(/[|,;]\s*/);
+      if (parts.length >= 2 && /^\d{1,4}$/.test(parts[1])) return { company: parts[0], table: parts[1] };
+      return null;
+    }
   </script>
 </body>
 </html>
