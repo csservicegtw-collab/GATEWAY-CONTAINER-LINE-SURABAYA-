@@ -13,38 +13,40 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      background: black;
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
       color: white;
       text-align: center;
-      overflow: hidden;
+      position: relative;
     }
 
-    /* Background video */
-    #bg-video {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: -1;
-    }
-
-    /* Animasi welcome berkilau */
+    /* Welcome dengan efek berkilau berurutan */
     .welcome {
       font-size: 48px;
       font-weight: bold;
+      color: #FFD700;
       margin-top: 40px;
-      background: linear-gradient(90deg, #FFD700, #ffffff, #FFD700);
-      background-size: 300% auto;
-      color: transparent;
-      background-clip: text;
-      -webkit-background-clip: text;
-      animation: shine 6s linear infinite;
+      line-height: 1.5;
+      opacity: 0;
+      animation: fadeIn 2s ease forwards;
     }
 
-    @keyframes shine {
-      0%   { background-position: 0% center; }
-      100% { background-position: 300% center; }
+    .welcome span {
+      display: inline-block;
+      opacity: 0.85;
+    }
+
+    .welcome span.shimmer {
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    @keyframes shimmer {
+      0%, 100% { text-shadow: none; opacity: 0.85; }
+      50% { text-shadow: 0 0 10px #fff, 0 0 20px #FFD700; opacity: 1; }
     }
 
     .title {
@@ -56,9 +58,9 @@
     }
 
     .company {
-      font-size: 40px;
+      font-size: 44px;
       color: #98c732;
-      margin-top: 40px;
+      margin-top: 60px;
       font-weight: bold;
       text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
     }
@@ -74,15 +76,16 @@
     }
 
     .table-text {
-      font-size: 26px;
+      font-size: 28px;
       margin-bottom: 10px;
       color: white;
     }
 
     .table-number {
-      font-size: 70px;
+      font-size: 90px;
       font-weight: bold;
       color: #FFD700;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
     }
 
     .watermark {
@@ -93,28 +96,33 @@
       opacity: 0.7;
     }
 
-    /* Animasi idle */
-    .idle {
-      animation: pulse 1s infinite;
+    /* Tampilan standby */
+    #standby {
+      display: none;
+      margin-top: 100px;
+      font-size: 32px;
+      font-weight: bold;
+      color: #FFD700;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
     }
 
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.4; }
-      100% { opacity: 1; }
+    .loader {
+      border: 5px solid rgba(255,255,255,0.2);
+      border-top: 5px solid #FFD700;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin: 20px auto;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <!-- Background video dengan fallback -->
-  <video id="bg-video" autoplay muted loop playsinline>
-    <source src="background.mp4" type="video/mp4">
-  </video>
-
-  <div class="welcome" id="welcome">
-    SELAMAT DATANG DI CUSTOMER GATHERING <br>
-    GATEWAY CONTAINER LINE SURABAYA 2025
-  </div>
+  <div class="welcome" id="welcome"></div>
 
   <div class="title">
     "Navigating The Turbulence, Cruising The Opportunities"
@@ -122,44 +130,128 @@
 
   <div class="company" id="company">Nama Perusahaan</div>
 
-  <div class="table-box">
+  <div class="table-box" id="table-box">
     <div class="table-text">Nomor Meja</div>
     <div class="table-number" id="table-number">--</div>
+  </div>
+
+  <div id="standby">
+    Silahkan Scan Barcode Anda
+    <div class="loader"></div>
   </div>
 
   <div class="watermark">Tim Bjir</div>
 
   <script>
-    let lastUpdate = Date.now();
+    // --- Buat Welcome per huruf ---
+    const welcomeEl = document.getElementById("welcome");
+    const welcomeText = "SELAMAT DATANG DI CUSTOMER GATHERING\nGATEWAY CONTAINER LINE SURABAYA 2025";
+    const chars = welcomeText.split("");
 
-    // Ambil query URL
-    function getQueryParams() {
-      const urlParams = new URLSearchParams(window.location.search);
-      return {
-        company: urlParams.get("company") || "Nama Perusahaan",
-        table: urlParams.get("table") || "--"
-      };
-    }
-
-    function updateDisplay() {
-      const params = getQueryParams();
-      document.getElementById("company").textContent = params.company;
-      document.getElementById("table-number").textContent = params.table;
-      lastUpdate = Date.now();
-      document.getElementById("company").classList.remove("idle");
-      document.getElementById("table-number").classList.remove("idle");
-    }
-
-    // Idle check
-    setInterval(() => {
-      if (Date.now() - lastUpdate > 10000) { // 10 detik
-        document.getElementById("company").classList.add("idle");
-        document.getElementById("table-number").classList.add("idle");
+    let shimmerIndex = 0;
+    chars.forEach((char, i) => {
+      if (char === "\n") {
+        welcomeEl.appendChild(document.createElement("br"));
+      } else {
+        const span = document.createElement("span");
+        span.textContent = char;
+        welcomeEl.appendChild(span);
       }
-    }, 2000);
+    });
 
-    // Update pertama kali
-    updateDisplay();
+    // --- Efek shimmer dari S sampai 5 ---
+    const spans = Array.from(welcomeEl.querySelectorAll("span"));
+    function shimmerLoop() {
+      spans.forEach(s => s.classList.remove("shimmer"));
+      spans[shimmerIndex].classList.add("shimmer");
+      shimmerIndex = (shimmerIndex + 1) % spans.length;
+    }
+    setInterval(shimmerLoop, 150); // efek jalan perlahan
+
+    // --- Ambil query dari URL ---
+    function getQueryParamsFromLocation() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search || "");
+        return {
+          company: (urlParams.get("company") || "Nama Perusahaan").toString(),
+          table: (urlParams.get("table") || "--").toString()
+        };
+      } catch {
+        return { company: "Nama Perusahaan", table: "--" };
+      }
+    }
+
+    function parseScanToParams(data) {
+      const raw = (data || "").trim();
+      if (!raw) return null;
+      let qs = "";
+
+      try {
+        const maybeUrl = raw.match(/^[a-zA-Z]+:\/\//) ? raw : ("http://" + raw);
+        const u = new URL(maybeUrl);
+        qs = u.search || "";
+      } catch {}
+
+      if (!qs && raw.includes("?")) qs = raw.slice(raw.indexOf("?"));
+      if (!qs && raw.includes("=")) qs = "?" + raw;
+
+      if (qs) {
+        const usp = new URLSearchParams(qs.startsWith("?") ? qs.slice(1) : qs);
+        const company = usp.get("company");
+        const table = usp.get("table");
+        if (company || table) return { company: company || "TIDAK DIKENAL", table: table || "--" };
+      }
+
+      if (/^\d{1,4}$/.test(raw)) return { company: "TIDAK DIKENAL", table: raw };
+      const parts = raw.split(/[|,;]\s*/);
+      if (parts.length >= 2 && /^\d{1,4}$/.test(parts[1])) return { company: parts[0], table: parts[1] };
+      return null;
+    }
+
+    function updateDisplay(params) {
+      document.getElementById("company").textContent = params.company.toUpperCase();
+      document.getElementById("table-number").textContent = params.table;
+
+      // Reset timer kalau ada scan
+      resetInactivityTimer();
+      document.getElementById("table-box").style.display = "block";
+      document.getElementById("standby").style.display = "none";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updateDisplay(getQueryParamsFromLocation());
+      let buffer = "";
+      const allowed = /[0-9A-Za-zÀ-ž .,_\-@#:/?&=%+]/;
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const parsed = parseScanToParams(buffer);
+          buffer = "";
+          if (parsed) updateDisplay(parsed);
+          return;
+        }
+        if (e.key === "Backspace") { buffer = buffer.slice(0, -1); return; }
+        if (e.key.length !== 1) return;
+        if (allowed.test(e.key)) buffer += e.key;
+      });
+
+      document.addEventListener("paste", (e) => {
+        const text = (e.clipboardData || window.clipboardData).getData("text");
+        const parsed = parseScanToParams(text);
+        if (parsed) updateDisplay(parsed);
+      });
+    });
+
+    // --- Timer Inaktivitas: 10 detik ---
+    let inactivityTimer;
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        document.getElementById("table-box").style.display = "none";
+        document.getElementById("standby").style.display = "block";
+      }, 10000);
+    }
+    resetInactivityTimer();
   </script>
 </body>
 </html>
