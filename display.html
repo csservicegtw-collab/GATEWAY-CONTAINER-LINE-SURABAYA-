@@ -2,256 +2,140 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Display QR Code</title>
+  <title>Display - Customer Gathering</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       height: 100vh;
-      font-family: 'Georgia', serif;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      justify-content: flex-start;
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      text-align: center;
+      flex-direction: column;
+      background: url("background.jpg") no-repeat center center/cover;
       position: relative;
+      overflow: hidden;
+      font-family: "Georgia", serif;
     }
 
-    /* Welcome dengan efek berkilau berurutan */
-    .welcome {
-      font-size: 48px;
-      font-weight: bold;
-      color: #FFD700;
-      margin-top: 40px;
-      line-height: 1.5;
-      opacity: 0;
-      animation: fadeIn 2s ease forwards;
+    /* Overlay shadow biar background tidak terlalu terang */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 0;
     }
 
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      color: white;
+    }
+
+    /* Animasi berkilau per huruf */
     .welcome span {
       display: inline-block;
-      opacity: 0.85;
+      font-size: 46px;
+      font-weight: bold;
+      color: #FFD700;
+      animation: shimmer 3s linear infinite;
+      background: linear-gradient(90deg, #FFD700 20%, #fff 40%, #FFD700 60%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% auto;
     }
 
-    .welcome span.shimmer {
-      animation: shimmer 2s infinite;
-    }
-
-    @keyframes fadeIn {
-      to { opacity: 1; }
+    /* Delay per huruf supaya efek berurutan */
+    .welcome span:nth-child(n) {
+      animation-delay: calc(var(--i) * 0.1s);
     }
 
     @keyframes shimmer {
-      0%, 100% { text-shadow: none; opacity: 0.85; }
-      50% { text-shadow: 0 0 10px #fff, 0 0 20px #FFD700; opacity: 1; }
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
     }
 
     .title {
-      font-size: 38px;
+      font-size: 34px;
       font-style: italic;
       color: #58caed;
-      margin-top: 20px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+      margin-top: 10px;
     }
 
     .company {
-      font-size: 44px;
-      color: #98c732;
-      margin-top: 60px;
+      margin-top: 40px;
+      font-size: 40px;
       font-weight: bold;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+      color: #98c732;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
     }
 
     .table-box {
-      margin-top: 20px;
-      padding: 40px;
+      margin: 20px auto;
+      width: 200px; height: 200px;
       border: 5px solid gold;
-      border-radius: 20px;
-      background: rgba(0,0,0,0.6);
-      box-shadow: 0 0 15px rgba(255,215,0,0.7);
-      min-width: 280px;
-    }
-
-    .table-text {
-      font-size: 28px;
-      margin-bottom: 10px;
-      color: white;
-    }
-
-    .table-number {
-      font-size: 90px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 70px;
       font-weight: bold;
       color: #FFD700;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+      text-shadow: 0 0 15px rgba(255,215,0,0.8);
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 10px gold; }
+      to { box-shadow: 0 0 30px gold; }
     }
 
     .watermark {
-      position: absolute;
-      bottom: 20px;
+      margin-top: 40px;
       font-size: 20px;
       color: white;
-      opacity: 0.7;
-    }
-
-    /* Tampilan standby */
-    #standby {
-      display: none;
-      margin-top: 100px;
-      font-size: 32px;
-      font-weight: bold;
-      color: #FFD700;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
-    }
-
-    .loader {
-      border: 5px solid rgba(255,255,255,0.2);
-      border-top: 5px solid #FFD700;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      margin: 20px auto;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
+      opacity: 0.5;
     }
   </style>
 </head>
 <body>
-  <div class="welcome" id="welcome"></div>
+  <div class="container">
+    <!-- Welcome dengan animasi per huruf -->
+    <div class="welcome" id="welcome-text"></div>
 
-  <div class="title">
-    "Navigating The Turbulence, Cruising The Opportunities"
+    <!-- Title event -->
+    <div class="title">"Navigating The Turbulence, Cruising The Opportunities"</div>
+
+    <!-- Nama perusahaan -->
+    <div class="company" id="company-name">Nama Perusahaan</div>
+
+    <!-- Kotak nomor meja -->
+    <div class="table-box" id="table-number">0</div>
+
+    <!-- Watermark -->
+    <div class="watermark">Tim Bjir</div>
   </div>
-
-  <div class="company" id="company">Nama Perusahaan</div>
-
-  <div class="table-box" id="table-box">
-    <div class="table-text">Nomor Meja</div>
-    <div class="table-number" id="table-number">--</div>
-  </div>
-
-  <div id="standby">
-    Silahkan Scan Barcode Anda
-    <div class="loader"></div>
-  </div>
-
-  <div class="watermark">Tim Bjir</div>
 
   <script>
-    // --- Buat Welcome per huruf ---
-    const welcomeEl = document.getElementById("welcome");
-    const welcomeText = "SELAMAT DATANG DI CUSTOMER GATHERING\nGATEWAY CONTAINER LINE SURABAYA 2025";
-    const chars = welcomeText.split("");
+    // Kalimat Welcome dipisahkan per huruf agar ada animasi shimmer bergiliran
+    const welcomeText = "SELAMAT DATANG DI CUSTOMER GATHERING GATEWAY CONTAINER LINE SURABAYA 2025";
+    const welcomeContainer = document.getElementById("welcome-text");
 
-    let shimmerIndex = 0;
-    chars.forEach((char, i) => {
-      if (char === "\n") {
-        welcomeEl.appendChild(document.createElement("br"));
-      } else {
-        const span = document.createElement("span");
-        span.textContent = char;
-        welcomeEl.appendChild(span);
-      }
+    welcomeText.split("").forEach((char, index) => {
+      const span = document.createElement("span");
+      span.textContent = char === " " ? "\u00A0" : char; // tetap ada spasi
+      span.style.setProperty("--i", index);
+      welcomeContainer.appendChild(span);
     });
 
-    // --- Efek shimmer dari S sampai 5 ---
-    const spans = Array.from(welcomeEl.querySelectorAll("span"));
-    function shimmerLoop() {
-      spans.forEach(s => s.classList.remove("shimmer"));
-      spans[shimmerIndex].classList.add("shimmer");
-      shimmerIndex = (shimmerIndex + 1) % spans.length;
-    }
-    setInterval(shimmerLoop, 150); // efek jalan perlahan
-
-    // --- Ambil query dari URL ---
-    function getQueryParamsFromLocation() {
-      try {
-        const urlParams = new URLSearchParams(window.location.search || "");
-        return {
-          company: (urlParams.get("company") || "Nama Perusahaan").toString(),
-          table: (urlParams.get("table") || "--").toString()
-        };
-      } catch {
-        return { company: "Nama Perusahaan", table: "--" };
-      }
-    }
-
-    function parseScanToParams(data) {
-      const raw = (data || "").trim();
-      if (!raw) return null;
-      let qs = "";
-
-      try {
-        const maybeUrl = raw.match(/^[a-zA-Z]+:\/\//) ? raw : ("http://" + raw);
-        const u = new URL(maybeUrl);
-        qs = u.search || "";
-      } catch {}
-
-      if (!qs && raw.includes("?")) qs = raw.slice(raw.indexOf("?"));
-      if (!qs && raw.includes("=")) qs = "?" + raw;
-
-      if (qs) {
-        const usp = new URLSearchParams(qs.startsWith("?") ? qs.slice(1) : qs);
-        const company = usp.get("company");
-        const table = usp.get("table");
-        if (company || table) return { company: company || "TIDAK DIKENAL", table: table || "--" };
-      }
-
-      if (/^\d{1,4}$/.test(raw)) return { company: "TIDAK DIKENAL", table: raw };
-      const parts = raw.split(/[|,;]\s*/);
-      if (parts.length >= 2 && /^\d{1,4}$/.test(parts[1])) return { company: parts[0], table: parts[1] };
-      return null;
-    }
-
-    function updateDisplay(params) {
-      document.getElementById("company").textContent = params.company.toUpperCase();
-      document.getElementById("table-number").textContent = params.table;
-
-      // Reset timer kalau ada scan
-      resetInactivityTimer();
-      document.getElementById("table-box").style.display = "block";
-      document.getElementById("standby").style.display = "none";
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      updateDisplay(getQueryParamsFromLocation());
-      let buffer = "";
-      const allowed = /[0-9A-Za-zÀ-ž .,_\-@#:/?&=%+]/;
-
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const parsed = parseScanToParams(buffer);
-          buffer = "";
-          if (parsed) updateDisplay(parsed);
-          return;
-        }
-        if (e.key === "Backspace") { buffer = buffer.slice(0, -1); return; }
-        if (e.key.length !== 1) return;
-        if (allowed.test(e.key)) buffer += e.key;
-      });
-
-      document.addEventListener("paste", (e) => {
-        const text = (e.clipboardData || window.clipboardData).getData("text");
-        const parsed = parseScanToParams(text);
-        if (parsed) updateDisplay(parsed);
-      });
-    });
-
-    // --- Timer Inaktivitas: 10 detik ---
-    let inactivityTimer;
-    function resetInactivityTimer() {
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        document.getElementById("table-box").style.display = "none";
-        document.getElementById("standby").style.display = "block";
-      }, 10000);
-    }
-    resetInactivityTimer();
+    // Simulasi update (untuk integrasi realtime gunakan Firebase atau WebSocket)
+    setTimeout(() => {
+      document.getElementById("company-name").textContent = "PT GATEWAY CONTAINER LINE";
+      document.getElementById("table-number").textContent = "12";
+    }, 5000);
   </script>
 </body>
 </html>
