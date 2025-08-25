@@ -79,7 +79,7 @@
       color: #ccc;
     }
 
-    /* Panel input elegan */
+    /* Panel input elegan (tanpa mengubah tema utama) */
     #input-panel {
       margin-top: 30px;
       padding: 25px;
@@ -106,9 +106,9 @@
       border: none;
       margin-bottom: 15px;
       outline: none;
+      background: #fff;
     }
-    #perwakilan { background: #fff; }
-    #manualInput { display: none; background: #fff; }
+    #manualInput { display: none; }
     #btnSubmit {
       width: 100%;
       padding: 12px;
@@ -169,65 +169,73 @@
     const inputPanel = document.getElementById("input-panel");
     const perwakilanSelect = document.getElementById("perwakilan");
     const manualInput = document.getElementById("manualInput");
-    let lastKeyHandled = null;
+
+    async function loadCompanies() {
+      try {
+        const res = await fetch('companies.json', { cache: 'no-store' });
+        if (!res.ok) return {};
+        return await res.json();
+      } catch { return {}; }
+    }
 
     // Dengarkan scan terbaru dari index.html
     const scanRef = ref(db, 'scanned');
-    onChildAdded(scanRef, async (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
+    let lastKeyHandled = null;
 
-      // Hindari double handling jika refresh cepat
+    onChildAdded(scanRef, async (snapshot) => {
       if (snapshot.key === lastKeyHandled) return;
       lastKeyHandled = snapshot.key;
 
-      companyEl.textContent = (data.company || '').toUpperCase();
-      tableEl.textContent = data.table || '--';
+      const data = snapshot.val();
+      if (!data) return;
+
+      const company = data.company || '';
+      const table = data.table || '--';
+
+      companyEl.textContent = company.toUpperCase();
+      tableEl.textContent = table;
       inputPanel.style.display = "block";
 
-      // Isi daftar perwakilan
+      // Muat daftar perwakilan dari companies.json
       perwakilanSelect.innerHTML = "";
       manualInput.style.display = "none";
       manualInput.value = "";
 
-      const repsSnap = await get(ref(db, 'perwakilan/' + data.company));
-      let daftarResmi = [];
-      if (repsSnap.exists()) {
-        const reps = repsSnap.val();
-        daftarResmi = Object.values(reps).map(v => String(v));
-        daftarResmi.forEach(nama => {
-          const opt = document.createElement("option");
-          opt.value = nama;
-          opt.textContent = nama;
-          perwakilanSelect.appendChild(opt);
-        });
-      }
-      // Opsi manual
+      const companies = await loadCompanies();
+      const record = companies[company] || {};
+      const reps = Array.isArray(record.representatives) ? record.representatives : [];
+
+      reps.forEach(nama => {
+        const opt = document.createElement("option");
+        opt.value = String(nama);
+        opt.textContent = String(nama);
+        perwakilanSelect.appendChild(opt);
+      });
+
       const opt = document.createElement("option");
       opt.value = "LAINNYA";
       opt.textContent = "➕ Nama Lain (Manual)";
       perwakilanSelect.appendChild(opt);
 
-      // Tampilkan kolom manual jika pilih LAINNYA
       perwakilanSelect.onchange = () => {
         manualInput.style.display = (perwakilanSelect.value === "LAINNYA") ? "block" : "none";
       };
 
-      // Submit kehadiran
       document.getElementById("btnSubmit").onclick = async () => {
         let namaDipilih = perwakilanSelect.value;
         if (namaDipilih === "LAINNYA") {
-          namaDipilih = manualInput.value.trim();
+          namaDipilih = (manualInput.value || '').trim();
           if (!namaDipilih) {
             alert("⚠️ Harap masukkan nama pengganti!");
             return;
           }
         }
-        const status = daftarResmi.includes(namaDipilih) ? "VALID" : "PENGGANTI";
+
+        const status = reps.includes(namaDipilih) ? "VALID" : "PENGGANTI";
 
         await set(ref(db, 'kehadiran/' + Date.now()), {
-          company: data.company,
-          table: data.table,
+          company: company,
+          table: table,
           nama: namaDipilih,
           status: status,
           time: new Date().toISOString()
