@@ -88,7 +88,7 @@
     <div class="company" id="company">PT NAMA PERUSAHAAN</div>
     <div class="table" id="table">
       <span>NOMOR MEJA</span>
-      <div class="table-number">01</div>
+      <div class="table-number" id="table-number">--</div>
     </div>
     <div class="team">Team Event</div>
   </div>
@@ -96,7 +96,7 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
@@ -113,7 +113,7 @@
     const db = getDatabase(app);
 
     const companyEl = document.getElementById('company');
-    const tableNumEl = document.querySelector('.table-number');
+    const tableNumEl = document.getElementById('table-number');
 
     async function loadCompanies() {
       try {
@@ -123,14 +123,19 @@
       } catch { return {}; }
     }
 
+    function normalizeCompany(name) {
+      return (name || '').trim().toUpperCase();
+    }
+
     function show(company, table) {
-      companyEl.textContent = (company || 'PT NAMA PERUSAHAAN').toUpperCase();
-      tableNumEl.textContent = table || '01';
+      companyEl.textContent = normalizeCompany(company) || 'PT NAMA PERUSAHAAN';
+      tableNumEl.textContent = table || '--';
     }
 
     function logScan(company, table) {
-      push(ref(db, 'scanned'), {
-        company,
+      const id = Date.now(); // unik
+      set(ref(db, 'scanned/' + id), {
+        company: normalizeCompany(company),
         table,
         time: new Date().toISOString()
       });
@@ -143,7 +148,7 @@
 
       if (company && !table) {
         const companies = await loadCompanies();
-        const record = companies[company];
+        const record = companies[normalizeCompany(company)];
         if (record && record.table) table = String(record.table).padStart(2, '0');
       }
 
@@ -153,43 +158,7 @@
       }
     }
 
-    // Init from URL params (jika QR berupa URL)
     handleParamsOrFallback();
-
-    // Support scanner eksternal: URL atau "Company|Table" atau hanya "Company"
-    window.addEventListener('keydown', async (e) => {
-      if (e.key === 'Enter') {
-        const s = (window.currentScan || '').trim();
-        window.currentScan = '';
-        if (!s) return;
-
-        if (s.startsWith('http') || s.includes('?company=')) {
-          window.location.href = s;
-          return;
-        }
-
-        let company = '', table = '';
-        if (s.includes('|')) {
-          const [c, t] = s.split('|');
-          company = decodeURIComponent((c||'').trim());
-          table   = decodeURIComponent((t||'').trim());
-        } else {
-          company = decodeURIComponent(s);
-          const companies = await loadCompanies();
-          const record = companies[company];
-          table = record && record.table ? String(record.table).padStart(2, '0') : '';
-        }
-
-        if (company && table) {
-          show(company, table);
-          logScan(company, table);
-        } else {
-          alert('QR tidak lengkap. Gunakan URL, "Company|Table", atau pastikan company ada di companies.json');
-        }
-      } else {
-        window.currentScan = (window.currentScan || '') + e.key;
-      }
-    });
   </script>
 </body>
 </html>
