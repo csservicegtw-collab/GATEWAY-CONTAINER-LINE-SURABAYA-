@@ -112,56 +112,80 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    const companyEl = document.getElementById('company');
+    const tableNumEl = document.querySelector('.table-number');
+
+    async function loadCompanies() {
+      try {
+        const res = await fetch('companies.json', { cache: 'no-store' });
+        if (!res.ok) return {};
+        return await res.json();
+      } catch { return {}; }
+    }
+
     function show(company, table) {
-      document.getElementById('company').textContent = (company || 'PT NAMA PERUSAHAAN').toUpperCase();
-      document.querySelector('.table-number').textContent = table || '01';
+      companyEl.textContent = (company || 'PT NAMA PERUSAHAAN').toUpperCase();
+      tableNumEl.textContent = table || '01';
     }
 
     function logScan(company, table) {
-      const payload = {
+      push(ref(db, 'scanned'), {
         company,
         table,
         time: new Date().toISOString()
-      };
-      push(ref(db, 'scanned'), payload);
-      // Optional: tetap kirim ke Google Form (sesuai file mas sebelumnya)
-      const formURL = "https://docs.google.com/forms/d/e/1FAIpQLScU5G2UO2TKcVffDQEjSZdQuXfq43Ldgfq-lJW9DedgRmQbqg/formResponse";
-      const formData = new FormData();
-      formData.append("entry.712340243", company);
-      formData.append("entry.1805472999", table);
-      fetch(formURL, { method: "POST", mode: "no-cors", body: formData });
+      });
     }
 
-    // 1) Saat halaman dibuka dengan URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const pCompany = decodeURIComponent(urlParams.get('company') || '') || null;
-    const pTable   = decodeURIComponent(urlParams.get('table') || '') || null;
+    async function handleParamsOrFallback() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let company = decodeURIComponent(urlParams.get('company') || '').trim();
+      let table = decodeURIComponent(urlParams.get('table') || '').trim();
 
-    if (pCompany && pTable) {
-      show(pCompany, pTable);
-      logScan(pCompany, pTable);
+      if (company && !table) {
+        const companies = await loadCompanies();
+        const record = companies[company];
+        if (record && record.table) table = String(record.table).padStart(2, '0');
+      }
+
+      if (company && table) {
+        show(company, table);
+        logScan(company, table);
+      }
     }
 
-    // 2) Support scanner eksternal: URL penuh ATAU "Company|Table"
-    window.addEventListener('keydown', (e) => {
+    // Init from URL params (jika QR berupa URL)
+    handleParamsOrFallback();
+
+    // Support scanner eksternal: URL atau "Company|Table" atau hanya "Company"
+    window.addEventListener('keydown', async (e) => {
       if (e.key === 'Enter') {
         const s = (window.currentScan || '').trim();
-        if (!s) { window.currentScan = ''; return; }
+        window.currentScan = '';
+        if (!s) return;
 
         if (s.startsWith('http') || s.includes('?company=')) {
-          // Jika QR berisi URL → pindah ke URL itu
           window.location.href = s;
-        } else {
-          // Jika format "Company|Table"
-          const parts = s.split('|');
-          const company = decodeURIComponent(parts[0] || '').trim();
-          const table   = decodeURIComponent(parts[1] || '').trim();
-          if (company && table) {
-            show(company, table);
-            logScan(company, table);
-          }
+          return;
         }
-        window.currentScan = '';
+
+        let company = '', table = '';
+        if (s.includes('|')) {
+          const [c, t] = s.split('|');
+          company = decodeURIComponent((c||'').trim());
+          table   = decodeURIComponent((t||'').trim());
+        } else {
+          company = decodeURIComponent(s);
+          const companies = await loadCompanies();
+          const record = companies[company];
+          table = record && record.table ? String(record.table).padStart(2, '0') : '';
+        }
+
+        if (company && table) {
+          show(company, table);
+          logScan(company, table);
+        } else {
+          alert('QR tidak lengkap. Gunakan URL, "Company|Table", atau pastikan company ada di companies.json');
+        }
       } else {
         window.currentScan = (window.currentScan || '') + e.key;
       }
