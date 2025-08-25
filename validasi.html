@@ -79,7 +79,7 @@
       color: #ccc;
     }
 
-    /* 🔹 Panel input elegan */
+    /* Panel input elegan */
     #input-panel {
       margin-top: 30px;
       padding: 25px;
@@ -88,7 +88,7 @@
       border: 2px solid #FFD54F;
       display: none;
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     }
     #input-panel label {
@@ -107,12 +107,8 @@
       margin-bottom: 15px;
       outline: none;
     }
-    #perwakilan {
-      background: #fff;
-    }
-    #manualInput {
-      display: none;
-    }
+    #perwakilan { background: #fff; }
+    #manualInput { display: none; background: #fff; }
     #btnSubmit {
       width: 100%;
       padding: 12px;
@@ -125,10 +121,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    #btnSubmit:hover {
-      background: linear-gradient(45deg, #FFC107, #FFB300);
-      transform: scale(1.03);
-    }
+    #btnSubmit:hover { background: linear-gradient(45deg, #FFC107, #FFB300); transform: scale(1.03); }
   </style>
 </head>
 <script src="protect.js"></script>
@@ -176,65 +169,70 @@
     const inputPanel = document.getElementById("input-panel");
     const perwakilanSelect = document.getElementById("perwakilan");
     const manualInput = document.getElementById("manualInput");
+    let lastKeyHandled = null;
 
-    // 🔹 Listen data dari index.html (device 1)
+    // Dengarkan scan terbaru dari index.html
     const scanRef = ref(db, 'scanned');
-    onChildAdded(scanRef, (snapshot) => {
+    onChildAdded(scanRef, async (snapshot) => {
       const data = snapshot.val();
-      companyEl.textContent = data.company.toUpperCase();
-      tableEl.textContent = data.table;
+      if (!data) return;
+
+      // Hindari double handling jika refresh cepat
+      if (snapshot.key === lastKeyHandled) return;
+      lastKeyHandled = snapshot.key;
+
+      companyEl.textContent = (data.company || '').toUpperCase();
+      tableEl.textContent = data.table || '--';
       inputPanel.style.display = "block";
 
-      // Reset opsi perwakilan
+      // Isi daftar perwakilan
       perwakilanSelect.innerHTML = "";
       manualInput.style.display = "none";
       manualInput.value = "";
 
-      // Ambil daftar perwakilan dari Firebase
-      get(ref(db, 'perwakilan/' + data.company)).then((snap) => {
-        if (snap.exists()) {
-          const reps = snap.val();
-          Object.values(reps).forEach(nama => {
-            const opt = document.createElement("option");
-            opt.value = nama;
-            opt.textContent = nama;
-            perwakilanSelect.appendChild(opt);
-          });
-        }
-        // Tambah opsi manual
-        const opt = document.createElement("option");
-        opt.value = "LAINNYA";
-        opt.textContent = "➕ Nama Lain (Manual)";
-        perwakilanSelect.appendChild(opt);
-      });
+      const repsSnap = await get(ref(db, 'perwakilan/' + data.company));
+      let daftarResmi = [];
+      if (repsSnap.exists()) {
+        const reps = repsSnap.val();
+        daftarResmi = Object.values(reps).map(v => String(v));
+        daftarResmi.forEach(nama => {
+          const opt = document.createElement("option");
+          opt.value = nama;
+          opt.textContent = nama;
+          perwakilanSelect.appendChild(opt);
+        });
+      }
+      // Opsi manual
+      const opt = document.createElement("option");
+      opt.value = "LAINNYA";
+      opt.textContent = "➕ Nama Lain (Manual)";
+      perwakilanSelect.appendChild(opt);
 
-      // 🔹 tampilkan input manual jika pilih "LAINNYA"
+      // Tampilkan kolom manual jika pilih LAINNYA
       perwakilanSelect.onchange = () => {
-        if (perwakilanSelect.value === "LAINNYA") {
-          manualInput.style.display = "block";
-        } else {
-          manualInput.style.display = "none";
-        }
+        manualInput.style.display = (perwakilanSelect.value === "LAINNYA") ? "block" : "none";
       };
 
-      // Event submit kehadiran
-      document.getElementById("btnSubmit").onclick = () => {
-        let nama = perwakilanSelect.value;
-        if (nama === "LAINNYA") {
-          nama = manualInput.value.trim();
-          if (!nama) {
+      // Submit kehadiran
+      document.getElementById("btnSubmit").onclick = async () => {
+        let namaDipilih = perwakilanSelect.value;
+        if (namaDipilih === "LAINNYA") {
+          namaDipilih = manualInput.value.trim();
+          if (!namaDipilih) {
             alert("⚠️ Harap masukkan nama pengganti!");
             return;
           }
         }
-        const hadirRef = ref(db, 'kehadiran/' + Date.now());
-        set(hadirRef, {
+        const status = daftarResmi.includes(namaDipilih) ? "VALID" : "PENGGANTI";
+
+        await set(ref(db, 'kehadiran/' + Date.now()), {
           company: data.company,
           table: data.table,
-          nama: nama,
+          nama: namaDipilih,
+          status: status,
           time: new Date().toISOString()
         });
-        alert("✅ Kehadiran tercatat: " + nama);
+        alert(`✅ Kehadiran tercatat: ${namaDipilih} (${status})`);
       };
     });
   </script>
