@@ -1,0 +1,14 @@
+{
+  "Gateway": {
+    "table": 12,
+    "representatives": ["Budi Santoso", "Rina Kartika"]
+  },
+  "Pusaka Lintas": {
+    "table": 16,
+    "representatives": ["Andi Pratama", "Dewi Lestari"]
+  },
+  "Samudera Sejati": {
+    "table": 5,
+    "representatives": ["Hendra Wijaya", "Siti Nurhaliza"]
+  }
+}
