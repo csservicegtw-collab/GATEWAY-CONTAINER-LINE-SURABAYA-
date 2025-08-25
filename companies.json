@@ -1,18 +1,14 @@
 {
-  "GATEWAY CONTAINER LINE": {
-    "table": "01",
-    "representatives": ["Jokowi Widodo", "Ariana Grande 2"]
+  "SUNGGONG": {
+    "table": "VIP",
+    "representatives": ["Joko", "Widodo"]
   },
-  "PT CONTOH ABADI": {
-    "table": "02",
-    "representatives": ["Budi Santoso", "Rina Kartika"]
+  "FORIN LOGISTICS": {
+    "table": "10",
+    "representatives": ["Prabowo", "Subiantoro"]
   },
-  "PT PUSAKA LINTAS": {
-    "table": "16",
-    "representatives": ["Andi Pratama", "Dewi Lestari"]
-  },
-  "PT SAMUDERA SEJATI": {
-    "table": "05",
-    "representatives": ["Hendra Wijaya", "Siti Nurhaliza"]
+  "PUMA SUB": {
+    "table": "23",
+    "representatives": ["Intans", "Segara"]
   }
 }
