@@ -78,31 +78,6 @@
       font-size: 14px;
       color: #ccc;
     }
-    /* 🔹 Panel input perwakilan (device panitia 2) */
-    #input-panel {
-      margin-top: 30px;
-      padding: 20px;
-      border-radius: 15px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid #FFD54F;
-      display: none;
-    }
-    #perwakilan {
-      font-size: 18px;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin-top: 10px;
-    }
-    #btnSubmit {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      background: #FFD54F;
-      cursor: pointer;
-    }
   </style>
 </head>
 <script src="protect.js"></script>
@@ -115,18 +90,13 @@
       <span>NOMOR MEJA</span>
       <div class="table-number">01</div>
     </div>
-    <div id="input-panel">
-      <label for="perwakilan" style="color:#fff;font-size:18px;">Pilih Nama Perwakilan:</label>
-      <select id="perwakilan"></select><br>
-      <button id="btnSubmit">Konfirmasi Hadir</button>
-    </div>
     <div class="team">Team Event</div>
   </div>
 
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, set, push, child, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
@@ -142,92 +112,58 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const company = decodeURIComponent(urlParams.get('company') || 'PT NAMA PERUSAHAAN');
-    const table = decodeURIComponent(urlParams.get('table') || '01');
-    const mode = urlParams.get('mode') || 'display'; // 🔹 default display
-
-    document.getElementById('company').textContent = company.toUpperCase();
-    document.querySelector('.table-number').textContent = table;
-
-    const timestamp = new Date().toISOString();
-
-    // 🔹 Log absensi (device display utama)
-    if (mode === 'display') {
-      set(ref(db, 'scanned/' + Date.now()), {
-        company: company,
-        table: table,
-        time: timestamp
-      });
+    function show(company, table) {
+      document.getElementById('company').textContent = (company || 'PT NAMA PERUSAHAAN').toUpperCase();
+      document.querySelector('.table-number').textContent = table || '01';
     }
 
-    // 🔹 Input panel hanya muncul di mode "input"
-    if (mode === 'input') {
-      document.getElementById("input-panel").style.display = "block";
-
-      // Ambil daftar perwakilan dari Firebase (sheet perwakilan)
-      const repsRef = ref(db, 'perwakilan/' + company);
-      get(repsRef).then((snapshot) => {
-        const select = document.getElementById("perwakilan");
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          Object.values(data).forEach(nama => {
-            const opt = document.createElement("option");
-            opt.value = nama;
-            opt.textContent = nama;
-            select.appendChild(opt);
-          });
-        }
-        // Tambah opsi manual (untuk pengganti)
-        const opt = document.createElement("option");
-        opt.value = "LAINNYA";
-        opt.textContent = "Nama Lain (Manual)";
-        select.appendChild(opt);
-      });
-
-      document.getElementById("btnSubmit").addEventListener("click", () => {
-        let nama = document.getElementById("perwakilan").value;
-        if (nama === "LAINNYA") {
-          nama = prompt("Masukkan nama pengganti:");
-        }
-        const hadirRef = ref(db, 'kehadiran/' + Date.now());
-        set(hadirRef, {
-          company: company,
-          table: table,
-          nama: nama,
-          time: timestamp
-        });
-        alert("✅ Kehadiran tercatat: " + nama);
-      });
-    }
-
-    // 🔹 Kirim juga ke Google Form (absensi utama, bukan detail)
-    if (mode === 'display') {
+    function logScan(company, table) {
+      const payload = {
+        company,
+        table,
+        time: new Date().toISOString()
+      };
+      push(ref(db, 'scanned'), payload);
+      // Optional: tetap kirim ke Google Form (sesuai file mas sebelumnya)
       const formURL = "https://docs.google.com/forms/d/e/1FAIpQLScU5G2UO2TKcVffDQEjSZdQuXfq43Ldgfq-lJW9DedgRmQbqg/formResponse";
       const formData = new FormData();
       formData.append("entry.712340243", company);
       formData.append("entry.1805472999", table);
-
-      fetch(formURL, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData
-      });
+      fetch(formURL, { method: "POST", mode: "no-cors", body: formData });
     }
-  </script>
 
-  <!-- 🔹 Script untuk scanner eksternal -->
-  <script>
-    document.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        let scanned = window.currentScan || "";
-        if (scanned.trim() !== "") {
-          localStorage.setItem("lastScan", scanned.trim());
-          console.log("QR Scanned:", scanned.trim());
-          window.currentScan = "";
+    // 1) Saat halaman dibuka dengan URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const pCompany = decodeURIComponent(urlParams.get('company') || '') || null;
+    const pTable   = decodeURIComponent(urlParams.get('table') || '') || null;
+
+    if (pCompany && pTable) {
+      show(pCompany, pTable);
+      logScan(pCompany, pTable);
+    }
+
+    // 2) Support scanner eksternal: URL penuh ATAU "Company|Table"
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const s = (window.currentScan || '').trim();
+        if (!s) { window.currentScan = ''; return; }
+
+        if (s.startsWith('http') || s.includes('?company=')) {
+          // Jika QR berisi URL → pindah ke URL itu
+          window.location.href = s;
+        } else {
+          // Jika format "Company|Table"
+          const parts = s.split('|');
+          const company = decodeURIComponent(parts[0] || '').trim();
+          const table   = decodeURIComponent(parts[1] || '').trim();
+          if (company && table) {
+            show(company, table);
+            logScan(company, table);
+          }
         }
+        window.currentScan = '';
       } else {
-        window.currentScan = (window.currentScan || "") + e.key;
+        window.currentScan = (window.currentScan || '') + e.key;
       }
     });
   </script>
