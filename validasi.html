@@ -78,8 +78,6 @@
       font-size: 14px;
       color: #ccc;
     }
-
-    /* Panel input elegan (tanpa mengubah tema utama) */
     #input-panel {
       margin-top: 30px;
       padding: 25px;
@@ -134,21 +132,19 @@
       <span>NOMOR MEJA</span>
       <div class="table-number" id="table-number">--</div>
     </div>
-
     <div id="input-panel">
       <label for="perwakilan">Pilih Nama Perwakilan:</label>
       <select id="perwakilan"></select>
       <input type="text" id="manualInput" placeholder="Masukkan nama pengganti...">
       <button id="btnSubmit">✅ Konfirmasi Hadir</button>
     </div>
-
     <div class="team">Team Event</div>
   </div>
 
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, onChildAdded, get, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, onChildAdded, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAw6mvIFe6xdZAejTJv3Jo8-fvBz3Av4K4",
@@ -170,6 +166,10 @@
     const perwakilanSelect = document.getElementById("perwakilan");
     const manualInput = document.getElementById("manualInput");
 
+    function normalizeCompany(name) {
+      return (name || '').trim().toUpperCase();
+    }
+
     async function loadCompanies() {
       try {
         const res = await fetch('companies.json', { cache: 'no-store' });
@@ -189,10 +189,10 @@
       const data = snapshot.val();
       if (!data) return;
 
-      const company = data.company || '';
+      const company = normalizeCompany(data.company || '');
       const table = data.table || '--';
 
-      companyEl.textContent = company.toUpperCase();
+      companyEl.textContent = company;
       tableEl.textContent = table;
       inputPanel.style.display = "block";
 
